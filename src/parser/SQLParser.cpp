@@ -1,13 +1,14 @@
 #include <iostream>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "SQLParser.h"
 #include "SQLParserException.h"
 
 SQLParser::SQLParser()
-	: CREATE_TABLE_REGEX("CREATE\\s+TABLE\\s+[a-z]+\\((\\s*[a-z]+\\s+[a-z]+,){0,}\\);", boost::regex::icase)
-	, SELECT_FROM_REGEX("SELECT\\s+\\*\\s+FROM\\s+[a-z]+;", boost::regex::icase)
-	, INSERT_INTO_REGEX("INSERT\\s+INTO\\s+[a-z]+(\\((\\s*[a-z]+,){1,}\\))? VALUES \\((\\s*[a-z]+\\s*,\\s*){1,}\\);", boost::regex::icase)
+	: CREATE_TABLE_REGEX("CREATE\\s+TABLE\\s+([\\w_]+)\\(((\\s*[\\w]+\\s+[\\w]+,|\\s*[\\w]+\\s+[\\w]+\\s*)+)\\);", boost::regex::icase)
+	, SELECT_FROM_REGEX("SELECT\\s+\\*\\s+FROM\\s+([\\w_]+);", boost::regex::icase)
+	, INSERT_INTO_REGEX("INSERT\\s+INTO\\s+([\\w]+)\\s+VALUES\\s*\\(((\\s*[\\w]+\\s*,|\\s*[\\w]+\\s*)+)\\);", boost::regex::icase)
 {}
 
 SQLParser & SQLParser::Instance() {
@@ -16,38 +17,51 @@ SQLParser & SQLParser::Instance() {
 }
 
 std::unique_ptr<ISQLStatement> SQLParser::ParseStatement(std::string const & statement) {
-	boost::smatch cmatch;
-	if (boost::regex_match(statement, cmatch, CREATE_TABLE_REGEX)) {
-		for(size_t i = 0; i < cmatch.size(); ++i) {
-			std::cout << cmatch[i] << std::endl;
-		}
-
-		return ParseCreateTableStatement(cmatch);
-	} else if (boost::regex_match(statement, cmatch, SELECT_FROM_REGEX))
-		return ParseSelectStatement(statement);
-	else if (boost::regex_match(statement, cmatch, INSERT_INTO_REGEX))
-		return ParseInsertStatement(statement);
+	boost::smatch what;
+	if (boost::regex_match(statement, what, CREATE_TABLE_REGEX)) {
+		return ParseCreateTableStatement(what);
+	} else if (boost::regex_match(statement, what, SELECT_FROM_REGEX))
+		return ParseSelectStatement(what);
+	else if (boost::regex_match(statement, what, INSERT_INTO_REGEX))
+		return ParseInsertStatement(what);
 
 	assert(false && "SQLParser: failed to parse statement.");
 	throw SQLParserException("SQLParser: failed to parse statement: " + statement);
 }
 
-std::unique_ptr<ISQLStatement> SQLParser::ParseCreateTableStatement(boost::smatch const & matches) {
-	for (auto m : matches) {
-		std::cout << m << std::endl;
+std::unique_ptr<ISQLStatement> SQLParser::ParseCreateTableStatement(boost::smatch const & what) {
+	std::string const tableName(what[1]);
+
+	std::vector<std::pair<std::string, std::string>> columnTypes;
+	std::vector<std::string> strings;
+	std::vector<std::string> columnType;
+	std::string str(what[2]);
+	boost::split(strings, str, boost::is_any_of(","));
+	for (size_t i = 0; i < strings.size(); ++i) {
+		std::string const token = boost::trim_copy(strings[i]);
+		boost::split(columnType, token, boost::is_any_of(" "));
+		columnTypes.emplace_back(columnType[0], columnType[1]);
+		columnType.clear();
 	}
 
-	return nullptr;
+	return std::make_unique<CreateStatement>(tableName, columnTypes);
 }
 
-std::unique_ptr<ISQLStatement> SQLParser::ParseSelectStatement(std::string const & statement) {
-	// TODO
-	assert(false && "IMPLEMENT ME");
-	return nullptr;
+std::unique_ptr<ISQLStatement> SQLParser::ParseSelectStatement(boost::smatch const & what) {
+	return std::make_unique<SelectStatement>(std::string(what[1]), std::vector<std::string>());
 }
 
-std::unique_ptr<ISQLStatement> SQLParser::ParseInsertStatement(std::string const & statement) {
-	// TODO
-	assert(false && "IMPLEMENT ME");
-	return nullptr;
+std::unique_ptr<ISQLStatement> SQLParser::ParseInsertStatement(boost::smatch const & what) {
+	std::string const tableName(what[1]);
+
+	std::vector<std::string> values;
+	std::vector<std::string> strings;
+	std::string str(what[2]);
+	boost::split(strings, str, boost::is_any_of(","));
+	for (size_t i = 0; i < strings.size(); ++i) {
+		boost::trim(strings[i]);
+		values.emplace_back(strings[i]);
+	}
+
+	return std::make_unique<InsertStatement>(tableName, values);
 }

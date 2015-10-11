@@ -22,9 +22,9 @@ private:
 	SQLParser();
 	~SQLParser() = default;
 
-	std::unique_ptr<ISQLStatement> ParseCreateTableStatement(boost::smatch const & matches);
-	std::unique_ptr<ISQLStatement> ParseSelectStatement(std::string const & statement);
-	std::unique_ptr<ISQLStatement> ParseInsertStatement(std::string const & statement);
+	std::unique_ptr<ISQLStatement> ParseCreateTableStatement(boost::smatch const & what);
+	std::unique_ptr<ISQLStatement> ParseSelectStatement(boost::smatch const & what);
+	std::unique_ptr<ISQLStatement> ParseInsertStatement(boost::smatch const & what);
 
 private:
 	boost::regex const CREATE_TABLE_REGEX;
