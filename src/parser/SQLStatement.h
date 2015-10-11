@@ -70,16 +70,17 @@ private:
 
 class InsertStatement : public ISQLStatement {
 public:
-	InsertStatement(std::string const & tableName)
+	InsertStatement(std::string const & tableName, std::vector<std::string> const & values)
 		: ISQLStatement(SQLStatementType::INSERT, tableName)
+		, m_values(values)
 	{}
 
-	std::vector<std::pair<std::string, std::string>> const & GetColumnValues() const {
-		return m_columnValues;
+	std::vector<std::string> const & GetValues() const {
+		return m_values;
 	}
 
 private:
-	std::vector<std::pair<std::string, std::string>> m_columnValues; /// first -- name, second -- value
+	std::vector<std::string> m_values;
 };
 
 #endif // SQLStatement_h
