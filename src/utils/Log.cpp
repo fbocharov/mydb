@@ -28,10 +28,10 @@ Log & Log::operator<< (EndlType) {
 	strftime(timeAndDate, 20, "%F %T", localtime(&now));
 	// If logging is enabled and set -> writing.
 	if (m_stream)
-		*m_stream << timeAndDate << ": " << m_message << std::endl;
+		*m_stream << timeAndDate << ": " << m_messageBuilder.str() << std::endl;
 	else
 	// Else just clearing message buffer.
-		m_message.clear();
+		m_messageBuilder.str("");
 	return *this;
 }
 

@@ -2,7 +2,7 @@
 #define Log_h
 
 #include <ostream>
-#include <string>
+#include <sstream>
 
 enum class LogType {
 	Debug,
@@ -25,7 +25,7 @@ public:
 
 private:
 	std::ostream * m_stream;
-	std::string m_message;
+	std::stringstream m_messageBuilder;
 
 	static std::ostream * m_debugAndInfoStream;
 	static std::ostream * m_warnAndErrorStream;
@@ -34,7 +34,7 @@ private:
 
 template<typename T>
 Log & Log::operator<< (T const & message) {
-	m_message.append(message);
+	m_messageBuilder << message;
 	return *this;
 }
 
