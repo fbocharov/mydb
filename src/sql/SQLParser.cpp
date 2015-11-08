@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS // for vs
 #include <iostream>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
