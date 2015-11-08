@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <parser/SQLParser.h>
-#include <parser/SQLParserException.h>
+#include <sql/SQLParser.h>
+#include <sql/SQLParserException.h>
 #include <utils/Log.h>
 
 int main(int argc, char * argv[]) {
