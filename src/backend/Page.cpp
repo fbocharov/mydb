@@ -5,7 +5,7 @@
 #include "Page.h"
 
 Page::Page(PageID id, char const * data)
-	: m_data{0}
+	: m_data{}
 	, m_id(id)
 	, m_isDirty(false)
 	, m_isPinned(false)
@@ -15,11 +15,11 @@ Page::Page(PageID id, char const * data)
 }
 
 char const * Page::GetData() const {
-	return m_data;
+	return m_data + sizeof(PageID);
 }
 
 char * Page::GetData() {
-	return m_data;
+	return m_data + sizeof(PageID);
 }
 
 bool Page::IsDirty() const {
@@ -56,8 +56,4 @@ PageID Page::GetNextPageID() const {
 	PageID nextID = 0;
 	BytesToNumber(m_data + PAGE_SIZE - sizeof(PageID), nextID);
 	return nextID;
-}
-
-size_t Page::GetSpaceOffset() const {
-	return sizeof(PageID);
 }

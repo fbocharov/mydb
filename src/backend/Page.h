@@ -10,6 +10,7 @@ static PageID constexpr INVALID_PAGE_ID = -1;
 class Page {
 public:
 	static size_t constexpr PAGE_SIZE = 4096;
+	static size_t constexpr PAGE_DATA_SIZE = PAGE_SIZE - 2 * sizeof(PageID);
 
 public:
 	Page(PageID id, char const * data = nullptr);
@@ -26,7 +27,6 @@ public:
 	PageID GetID() const;
 	PageID GetPrevPageID() const;
 	PageID GetNextPageID() const;
-	size_t GetSpaceOffset() const;
 
 private:
 	char m_data[PAGE_SIZE];
