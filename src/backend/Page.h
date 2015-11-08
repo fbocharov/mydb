@@ -1,7 +1,6 @@
 #ifndef Page_h
 #define Page_h
 
-#include <cstddef>
 #include <cstdint>
 
 typedef std::uint32_t PageID;

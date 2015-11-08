@@ -34,10 +34,9 @@ void HeapFile::DeallocatePage(PageID id) {
 	FreePagesStackPush(id);
 }
 
-
 void HeapFile::ReadPage(std::shared_ptr<Page> page) {
 	auto const pageID = page->GetID();
-	size_t const offset = HEADER_SIZE + pageID * Page::PAGE_SIZE;
+	uint16_t const offset = CalculatePageOffset(pageID);
 	try {
 		m_file.seekg(offset, std::ios_base::beg);
 		m_file.read(page->GetData(), Page::PAGE_SIZE);
@@ -48,7 +47,7 @@ void HeapFile::ReadPage(std::shared_ptr<Page> page) {
 
 void HeapFile::WritePage(std::shared_ptr<Page> page) {
 	auto const pageID = page->GetID();
-	size_t const offset = HEADER_SIZE + pageID * Page::PAGE_SIZE;
+	uint16_t const offset = CalculatePageOffset(pageID);
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
 		m_file.write(page->GetData(), Page::PAGE_SIZE);
@@ -59,14 +58,13 @@ void HeapFile::WritePage(std::shared_ptr<Page> page) {
 
 void HeapFile::ReadHeader() {
 	try {
-		char buf[HEADER_SIZE] = {0};
-		// Assume pos in file = 0.
+		char buf[HEADER_SIZE] {};
+		m_file.seekg(0, std::ios_base::beg);
 		m_file.read(buf, HEADER_SIZE);
-		size_t m = 0;
+		uint16_t m = 0;
 		BytesToNumber(buf, m);
-		if (MAGIC != m) {
-			; // Should throw?
-		}
+		if (MAGIC != m)
+			assert(false && "Magic don't match"); // Should throw?
 		BytesToNumber(buf + sizeof(MAGIC), m_maxPageID);
 		BytesToNumber(buf + sizeof(MAGIC) + sizeof(m_maxPageID), m_freePagesListHead);
 	} catch (std::ifstream::failure const & e) {
@@ -75,7 +73,7 @@ void HeapFile::ReadHeader() {
 }
 
 void HeapFile::WriteHeader() {
-	char buf[HEADER_SIZE] = {0};
+	char buf[HEADER_SIZE] {};
 	NumberToBytes(MAGIC, buf);
 	NumberToBytes(m_maxPageID, buf + sizeof(MAGIC));
 	NumberToBytes(m_freePagesListHead, buf + sizeof(MAGIC) + sizeof(m_maxPageID));
@@ -88,7 +86,7 @@ void HeapFile::WriteHeader() {
 }
 
 void HeapFile::ReservePages() {
-	char nulls[Page::PAGE_SIZE] = {0};
+	char nulls[Page::PAGE_SIZE] {};
 	m_file.seekp(0, std::ios_base::end);
 	for (size_t i = 0; i < RESERVE_PAGE_COUNT; ++i) {
 		m_file.write(nulls, Page::PAGE_SIZE);
@@ -101,8 +99,8 @@ PageID HeapFile::FreePagesStackPop() {
 	assert(INVALID_PAGE_ID != m_freePagesListHead);
 
 	PageID const pageID = m_freePagesListHead;
-	size_t const offset = HEADER_SIZE + (m_freePagesListHead + 1) * Page::PAGE_SIZE - sizeof(PageID);
-	char buf[sizeof(PageID)] = {0};
+	size_t const offset = CalculatePageOffset(m_freePagesListHead + 1) - sizeof(PageID);
+	char buf[sizeof(PageID)] {};
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
 		m_file.read(buf, sizeof(PageID));
@@ -114,9 +112,9 @@ PageID HeapFile::FreePagesStackPop() {
 }
 
 void HeapFile::FreePagesStackPush(PageID id) {
-	char buf[sizeof(PageID)] = {0};
+	char buf[sizeof(PageID)] {};
 	NumberToBytes(m_freePagesListHead, buf);
-	size_t const offset = HEADER_SIZE + (id + 1) * Page::PAGE_SIZE - sizeof(PageID);
+	size_t const offset = CalculatePageOffset(id + 1) - sizeof(PageID);
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
 		m_file.write(buf, sizeof(PageID));
@@ -124,4 +122,8 @@ void HeapFile::FreePagesStackPush(PageID id) {
 		throw IOException(e.what());
 	}
 	m_freePagesListHead = id;
+}
+
+uint16_t HeapFile::CalculatePageOffset(PageID pageID) const {
+	return HEADER_SIZE + Page::PAGE_SIZE * pageID;
 }
