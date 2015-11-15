@@ -15,6 +15,8 @@ PageManager::~PageManager() {
 }
 
 std::weak_ptr<Page> PageManager::AllocatePage() {
+	Log(LogType::Info) << "Request for allocate page... ";
+
 	if (MAX_PAGE_CACHE_SIZE == m_pageCache.size())
 		PopLRUPage();
 	auto pageID = m_heapFile.GetFreePageID();
@@ -22,10 +24,14 @@ std::weak_ptr<Page> PageManager::AllocatePage() {
 	m_pageCache[pageID] = page;
 	UpdateAccessTime(page);
 
+	Log(LogType::Info) << "done! New page id = " << page->GetID() << std::endl;
+
 	return page;
 }
 
 void PageManager::DeallocatePage(PageID id) {
+	Log(LogType::Info) << "Deallocating page with id = " << id << "." << std::endl;
+
 	m_heapFile.DeallocatePage(id);
 }
 
