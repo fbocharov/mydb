@@ -2,6 +2,7 @@
 #define Utils_h
 
 #include <cstddef>
+#include <cstring>
 
 // Playing with fire here!
 
@@ -13,8 +14,7 @@ inline void BytesToNumber(char const * bytes, T & number) {
 template<typename T>
 inline void NumberToBytes(T number, char * bytes) {
 	char const * numberPtr = reinterpret_cast<char const *>(&number);
-	for (size_t i = 0; i < sizeof(T); ++i)
-		bytes[i] = numberPtr[i];
+	::memcpy(bytes, numberPtr, sizeof(T));
 }
 
 #endif // Utils_h
