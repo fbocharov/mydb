@@ -15,7 +15,7 @@ struct ICursor {
 		std::vector<ColumnDescriptor> const & descriptors);
 	virtual ~ICursor() = default;
 
-	virtual Record Get() const;
+	Record Get();
 	/// Returns true if there is next record and moves to it.
 	virtual bool Next();
 

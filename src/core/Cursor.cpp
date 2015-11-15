@@ -12,14 +12,14 @@ ICursor::ICursor(
 	, m_currentRecordNumber(0)
 {}
 
-Record ICursor::Get() const {
+Record ICursor::Get() {
 	return m_currentPage.GetRecord(m_currentRecordNumber);
 }
 
 bool ICursor::Next() {
 	size_t const recordCount = m_currentPage.GetRecordCount();
 	do {
-		if (recordCount + 1 == m_currentRecordNumber) {
+		if (recordCount == m_currentRecordNumber + 1) {
 			PageID const nextPageID = m_currentPage.GetNextPageID();
 			if (INVALID_PAGE_ID == nextPageID)
 				return false;
