@@ -1,7 +1,8 @@
 #ifndef DataPage_h
 #define DataPage_h
 
-#include <vector>
+#include <map>
+#include <cstdint>
 
 #include <backend/Page.h>
 #include <backend/PageManager.h>
@@ -17,11 +18,11 @@ public:
 		std::vector<ColumnDescriptor> const & descrpitors);
 	~DataPage();
 
-	bool AppendRecord(Record const & record);
-	void UpdateRecord(size_t number, std::string const & column, std::string const & value);
+	bool AppendRecord(const std::map<std::string, std::string> &colVals);
+	void UpdateRecord(size_t number, const std::map<std::string, std::string> &colVals);
 	void DeleteRecord(size_t number);
+	Record GetRecord(size_t number);
 
-	Record GetRecord(size_t number) const;
 	uint16_t GetRecordCount() const;
 	PageID GetNextPageID() const;
 	PageID GetPrevPageID() const;
@@ -35,8 +36,9 @@ private:
 
 private:
 	PageManager * m_pageManager;
-	PageID m_currentPageID;
-	std::vector<ColumnDescriptor> const * m_columnDescriptors;
+	PageID m_pageID;
+	std::map<std::string, ColumnDescriptor> m_columnDescriptors;
+	std::map<std::string, uint16_t> m_columnOffsets;
 	// Caching them so it would not cause page fault when calling getters.
 	PageID m_prevPageID;
 	PageID m_nextPageID;
