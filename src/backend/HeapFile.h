@@ -3,7 +3,9 @@
 
 #include <fstream>
 #include <memory>
-#include <string>
+#include <cstdint>
+
+using std::uint16_t;
 
 #include "Page.h"
 
@@ -25,16 +27,18 @@ private:
 	PageID FreePagesStackPop();
 	void FreePagesStackPush(PageID id);
 
+	uint16_t CalculatePageOffset(PageID pageID) const;
+
 private:
 	std::fstream m_file;
 	PageID m_freePagesListHead;
 	PageID m_maxPageID;
 
 	static size_t constexpr RESERVE_PAGE_COUNT = 100;
-	static std::uint16_t constexpr MAGIC = 0b0101010101010101;
-	static size_t constexpr HEADER_SIZE =
-			sizeof(MAGIC) + sizeof(m_maxPageID) +
-			sizeof(m_freePagesListHead);
+	static uint16_t constexpr MAGIC = 0b0101010101010101;
+	static uint16_t constexpr HEADER_SIZE =
+			sizeof(MAGIC) + sizeof(PageID) +
+			sizeof(PageID);
 };
 
 #endif // HeapFile_h

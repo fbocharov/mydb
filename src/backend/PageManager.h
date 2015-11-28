@@ -19,6 +19,8 @@ public:
 	void DeallocatePage(PageID id);
 	std::weak_ptr<Page> GetPage(PageID id);
 
+	bool PageInCache(PageID id) const;
+
 private:
 	typedef std::chrono::system_clock::time_point TimePoint;
 

@@ -1,6 +1,9 @@
+#define _CRT_SECURE_NO_WARNINGS // for vs
 #include <iostream>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <utils/Log.h>
 
 #include "SQLParser.h"
 #include "SQLParserException.h"
@@ -17,6 +20,8 @@ SQLParser & SQLParser::Instance() {
 }
 
 std::unique_ptr<ISQLStatement> SQLParser::ParseStatement(std::string const & statement) {
+	Log(LogType::Debug) << "Parsing statement: " << statement << std::endl;
+
 	boost::smatch what;
 	if (boost::regex_match(statement, what, CREATE_TABLE_REGEX)) {
 		return ParseCreateTableStatement(what);
@@ -25,6 +30,7 @@ std::unique_ptr<ISQLStatement> SQLParser::ParseStatement(std::string const & sta
 	else if (boost::regex_match(statement, what, INSERT_INTO_REGEX))
 		return ParseInsertStatement(what);
 
+	Log(LogType::Info) << "Failed to parse statement."<< std::endl;
 	assert(false && "SQLParser: failed to parse statement.");
 	throw SQLParserException("SQLParser: failed to parse statement: " + statement);
 }
