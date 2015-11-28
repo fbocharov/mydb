@@ -24,7 +24,7 @@ protected:
 protected:
 	ColumnDescriptors const & m_descriptors;
 	PageManager & m_pageManager;
-	DataPage m_currentPage;
+	std::unique_ptr<DataPage> m_currentPage;
 	size_t m_currentRecordNumber; /// in page
 };
 
