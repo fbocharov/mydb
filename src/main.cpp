@@ -5,6 +5,7 @@
 #include <utils/Log.h>
 
 int main(int argc, char * argv[]) {
+	Log::SetStream(LogType::Info, std::cout);
 	Log::SetStream(LogType::Debug, std::cout);
 	Log::SetStream(LogType::Error, std::cerr);
 
