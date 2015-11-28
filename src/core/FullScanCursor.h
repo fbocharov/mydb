@@ -6,7 +6,7 @@
 class FullScanCursor : public ICursor {
 public:
 	FullScanCursor(PageManager & pageManager, PageID startPageID,
-			std::vector<ColumnDescriptor> const & descriptors)
+			ColumnDescriptors const & descriptors)
 		: ICursor(pageManager, startPageID, descriptors)
 	{}
 

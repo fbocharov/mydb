@@ -11,8 +11,7 @@ struct ColumnDescriptor;
 struct PageManager;
 
 struct ICursor {
-	ICursor(PageManager & pageManager, PageID startPageID,
-		std::vector<ColumnDescriptor> const & descriptors);
+	ICursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors);
 	virtual ~ICursor() = default;
 
 	Record Get();
@@ -23,7 +22,7 @@ protected:
 	virtual bool AcceptCurrentRecord() = 0;
 
 protected:
-	std::vector<ColumnDescriptor> const & m_descriptors;
+	ColumnDescriptors const & m_descriptors;
 	PageManager & m_pageManager;
 	DataPage m_currentPage;
 	size_t m_currentRecordNumber; /// in page

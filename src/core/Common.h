@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <vector>
 
 enum class FieldType {
 	INT,
@@ -19,5 +20,6 @@ struct ColumnDescriptor {
 	std::uint8_t size; /// in bytes
 };
 
+typedef std::vector<ColumnDescriptor> ColumnDescriptors;
 
 #endif // Common_h

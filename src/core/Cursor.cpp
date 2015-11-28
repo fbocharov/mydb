@@ -5,7 +5,7 @@
 
 ICursor::ICursor(
 		PageManager & pageManager, PageID startPageID,
-		std::vector<ColumnDescriptor> const & descriptors)
+		ColumnDescriptors const & descriptors)
 	: m_descriptors(descriptors)
 	, m_pageManager(pageManager)
 	, m_currentPage(pageManager, startPageID, descriptors)
