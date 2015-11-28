@@ -24,6 +24,7 @@ private:
 	uint16_t const m_number;
 	std::map<std::string, ColumnDescriptor> const & m_descriptors;
 	std::map<std::string, std::string> m_columnValue;
+	bool m_isDirty;
 };
 
 #endif // Record_h
