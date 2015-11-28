@@ -5,13 +5,15 @@
 #include "Table.h"
 #include "FullScanCursor.h"
 
+using std::uint32_t;
+
 Table::Table(PageManager & manager, ColumnDescriptors const & descriptors)
 	: m_columnDescriptors(descriptors)
 	, m_pageManager(manager)
 {
 	auto firstPage = m_pageManager.AllocatePage().lock();
 	m_firstPageID = firstPage->GetID();
-	firstPage->SetNextPageID(firstPage->GetID());
+	firstPage->SetNextPageID(INVALID_PAGE_ID);
 	firstPage->SetPrevPageID(firstPage->GetID());
 	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, m_firstPageID, m_columnDescriptors);
 }
@@ -25,16 +27,8 @@ Table::Table(ColumnDescriptors const & columnDescriptors, PageManager & pageMana
 	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, lastPageID, m_columnDescriptors);
 }
 
-Table Table::Deserialize(Page const & page, PageManager & manager) {
-	using std::uint32_t;
-
+std::unique_ptr<Table> Table::Deserialize(Page const & page, PageManager & manager) {
 	char const * data = page.GetData();
-
-//	uint32_t nameLen = 0;
-//	BytesToNumber(data, nameLen);
-//	data += 4;
-//	std::string const name(data, nameLen);
-//	data += nameLen;
 
 	uint32_t fieldsCount = 0;
 	BytesToNumber(data, fieldsCount);
@@ -49,19 +43,11 @@ Table Table::Deserialize(Page const & page, PageManager & manager) {
 	PageID firstPageID = 0;
 	BytesToNumber(data, firstPageID);
 
-	return Table(descriptors, manager, firstPageID);
+	return std::make_unique<Table>(descriptors, manager, firstPageID);
 }
 
 void Table::Serialize(Page & page) {
-	using std::uint32_t;
-
 	char * data = page.GetData();
-
-//	uint32_t nameLen = m_name.length();
-//	NumberToBytes(nameLen, data);
-//	data += 4;
-//	memcpy(data, m_name.data(), nameLen);
-//	data += nameLen;
 
 	uint32_t descriptorCount = m_columnDescriptors.size();
 	NumberToBytes(descriptorCount, data);
@@ -97,7 +83,7 @@ void Table::AddPage() {
 	auto lastPage = m_pageManager.GetPage(firstPage->GetPrevPageID()).lock();
 	auto newPage = m_pageManager.AllocatePage().lock();
 
-	newPage->SetNextPageID(firstPage->GetID());
+	newPage->SetNextPageID(lastPage->GetNextPageID());
 	newPage->SetPrevPageID(lastPage->GetID());
 	PageID newPageID = newPage->GetID();
 	firstPage->SetPrevPageID(newPageID);
