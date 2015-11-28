@@ -3,19 +3,20 @@
 
 #include <map>
 #include <cstdint>
+#include <memory>
 
 #include <backend/Page.h>
-#include <backend/PageManager.h>
 
 #include "Common.h"
 #include "Record.h"
 
 using std::uint16_t;
 
+struct PageManager;
+
 class DataPage {
 public:
-	DataPage(PageManager & manager, PageID pageID,
-		std::vector<ColumnDescriptor> const & descrpitors);
+	DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors);
 	~DataPage();
 
 	bool AppendRecord(const std::map<std::string, std::string> &colVals);
@@ -24,6 +25,7 @@ public:
 	Record GetRecord(size_t number);
 
 	uint16_t GetRecordCount() const;
+	PageID GetID() const;
 	PageID GetNextPageID() const;
 	PageID GetPrevPageID() const;
 	bool HasFreeSpace() const;
@@ -36,7 +38,7 @@ private:
 
 private:
 	PageManager * m_pageManager;
-	PageID m_pageID;
+	PageID m_id;
 	std::map<std::string, ColumnDescriptor> m_columnDescriptors;
 	std::map<std::string, uint16_t> m_columnOffsets;
 	// Caching them so it would not cause page fault when calling getters.
@@ -47,7 +49,7 @@ private:
 
 	uint16_t m_recordLength;
 	static uint16_t constexpr HEADER_SIZE =
-		2 * sizeof(uint16_t); // record count + free space offset
+		2 * sizeof(uint16_t); /// record count + free space offset
 };
 
 #endif // DataPage_h

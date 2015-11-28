@@ -2,14 +2,14 @@
 #include <cassert>
 #include <cstring>
 
+#include <backend/PageManager.h>
 #include <utils/Utils.h>
 
 #include "DataPage.h"
 
-DataPage::DataPage(PageManager & manager, PageID pageID,
-		std::vector<ColumnDescriptor> const & descrpitors)
+DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors)
 	: m_pageManager(&manager)
-	, m_pageID(pageID)
+	, m_id(pageID)
 	, m_recordLength(0)
 {
 	if (!m_pageManager)
@@ -30,7 +30,8 @@ DataPage::DataPage(PageManager & manager, PageID pageID,
 }
 
 DataPage::~DataPage() {
-	// TODO: unpin current page if it's in page cache.
+	if (m_pageManager->PageInCache(m_id))
+		m_pageManager->GetPage(m_id).lock()->Unpin();
 }
 
 bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) {
@@ -83,6 +84,10 @@ uint16_t DataPage::GetRecordCount() const {
 	return m_recordCount;
 }
 
+PageID DataPage::GetID() const {
+	return m_id;
+}
+
 PageID DataPage::GetNextPageID() const {
 	return m_nextPageID;
 }
@@ -100,6 +105,9 @@ uint16_t DataPage::CalculateRecordOffset(size_t recordNumber) const {
 }
 
 void DataPage::ReadHeader(char const * data) {
+	// NOTE: this header should always be valid for every page. If page is empty,
+	// it must contain zeros but not memory trash. If not empty it must contain
+	// valid info.
 	BytesToNumber(data, m_recordCount);
 	data += sizeof(uint16_t);
 	BytesToNumber(data, m_freeSpaceOffset);
@@ -112,7 +120,7 @@ void DataPage::WriteHeader(char * data) {
 }
 
 std::shared_ptr<Page> DataPage::GetNativePage(bool needDirty) const {
-	auto page = m_pageManager->GetPage(m_pageID).lock();
+	auto page = m_pageManager->GetPage(m_id).lock();
 	page->Pin();
 	if (needDirty)
 		page->SetDirty();
