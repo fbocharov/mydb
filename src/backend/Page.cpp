@@ -57,3 +57,11 @@ PageID Page::GetNextPageID() const {
 	BytesToNumber(m_data + PAGE_SIZE - sizeof(PageID), nextID);
 	return nextID;
 }
+
+void Page::SetPrevPageID(PageID id) {
+	NumberToBytes(id, m_data);
+}
+
+void Page::SetNextPageID(PageID id) {
+	NumberToBytes(id, m_data + PAGE_SIZE - sizeof(PageID));
+}

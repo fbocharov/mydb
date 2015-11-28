@@ -20,6 +20,8 @@ public:
 	void SetDirty();
 	void Pin();
 	void Unpin();
+	void SetPrevPageID(PageID id);
+	void SetNextPageID(PageID id);
 
 	bool IsPinned() const;
 	bool IsDirty() const;
