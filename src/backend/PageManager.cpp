@@ -53,6 +53,10 @@ std::weak_ptr<Page> PageManager::GetPage(PageID id) {
 	return page;
 }
 
+bool PageManager::PageInCache(PageID id) const {
+	return m_pageCache.end() != m_pageCache.find(id);
+}
+
 void PageManager::FlushPage(std::shared_ptr<Page> page) {
 	if (page->IsDirty())
 		m_heapFile.WritePage(page);
