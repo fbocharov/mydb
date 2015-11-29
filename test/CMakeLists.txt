@@ -22,4 +22,5 @@ target_link_libraries(${PROJECT_NAME}
 	${GTEST_LIBRARY}
 	${GTEST_MAIN_LIBRARY}
 	pthread
+	mydb.lib
 )
