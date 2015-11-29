@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <sstream>
 #include <cassert>
 #include <cstring>
 #include <cstdio>
@@ -131,16 +132,17 @@ std::shared_ptr<Page> DataPage::GetNativePage(bool needDirty) const {
 }
 
 bool DataPage::CheckType(ColumnDescriptor const & descriptor, std::string const & value) {
+	std::stringstream checker(value);
 	if (descriptor.size >= value.length()) {
 		switch (descriptor.type) {
 			case FieldType::FLOAT:
 				float f;
-				return 1 == sscanf(value.c_str(), "%f", &f);
+				return bool(checker >> f);
 			case FieldType::INT:
 				int i;
-				return 1 == sscanf(value.c_str(), "%d", &i);
+				return bool(checker >> i);
 			case FieldType::VARCHAR:
-				return true;
+				return VARCHAR_MAX_LENGTH > value.length();
 		}
 	}
 
