@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.2)
 
 project(MyDB)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/)
+
 # Trying to find boost.regex -- this is needed for parser.
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.55 COMPONENTS regex REQUIRED)
