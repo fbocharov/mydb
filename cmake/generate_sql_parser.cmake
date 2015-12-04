@@ -3,36 +3,34 @@ cmake_minimum_required(VERSION 3.2)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-set(BISON_INPUT ${CMAKE_SOURCE_DIR}/src/sql/sql.y)
-set(BISON_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/parser.cpp)
+set(BISON_INPUT ${CMAKE_SOURCE_DIR}/src/sql/sql.ypp)
+set(BISON_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/SQLParserInternals.cpp)
 set(FLEX_INPUT ${CMAKE_SOURCE_DIR}/src/sql/sql.lex)
-set(FLEX_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/scanner.cpp)
+set(FLEX_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/SQLLexerInternals.cpp)
+set(FLEX_HEADER ${CMAKE_SOURCE_DIR}/src/sql/SQLScannerInternals.hpp)
 
-bison_target(SqlParser ${BISON_INPUT} ${BISON_OUTPUT})
-flex_target(SqlScanner ${FLEX_INPUT} ${FLEX_OUTPUT})
-add_flex_bison_dependency(SqlScanner SqlParser)
+if(BISON_FOUND)
+	add_custom_command(OUTPUT ${BISON_OUTPUT}
+		COMMAND ${BISON_EXECUTABLE}
+			--defines=${CMAKE_SOURCE_DIR}/src/sql/SQLParserInternals.hpp
+			--output=${BISON_OUTPUT}
+			${BISON_INPUT}
+		COMMENT "Generating parser."
+	)
+endif()
 
-#add_executable(Foo
-#	${FLEX_SqlParser_OUTPUTS}
-#	${BISON_SqlParser_OUTPUTS}
-#)
-#if(BISON_FOUND)
-#	add_custom_command(
-#		output ${BISON_OUTPUT}
-#		command ${BISON_EXECUTABLE}
-#			--defines=${CMAKE_SOURCE_DIR}/src/sql/tokens.h
-#			--output=${BISON_OUTPUT}
-#			${CMAKE_SOURCE_DIR}/src/sql/sql.y
-#		comment "Generating parser.cpp"
-#	)
-#endif()
+if(FLEX_FOUND)
+	add_custom_command(OUTPUT ${FLEX_OUTPUT}
+		COMMAND ${FLEX_EXECUTABLE}
+			--outfile=${FLEX_OUTPUT}
+			--header-file=${FLEX_HEADER}
+			${FLEX_INPUT}
+		COMMENT "Generating scanner."
+	)
+endif()
 
-#if(FLEX_FOUND)
-#	add_custom_command(
-#		output ${FLEX_OUTPUT}
-#		command ${FLEX_EXECUTABLE}
-#			--outfile=${FLEX_OUTPUT}
-#			${CMAKE_SOURCE_DIR}/src/sql/sql.lex
-#		comment "Generating scanner.cpp"
-#	)
-#endif()
+if(BISON_FOUND AND FLEX_FOUND)
+	add_custom_target(SQLGen ALL
+		DEPENDS ${FLEX_OUTPUT} ${BISON_OUTPUT}
+	)
+endif()
