@@ -1,6 +1,8 @@
 #include <stdexcept>
+#include <sstream>
 #include <cassert>
 #include <cstring>
+#include <cstdio>
 
 #include <backend/PageManager.h>
 #include <utils/Utils.h>
@@ -8,13 +10,10 @@
 #include "DataPage.h"
 
 DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors)
-	: m_pageManager(&manager)
+	: m_pageManager(manager)
 	, m_id(pageID)
 	, m_recordLength(0)
 {
-	if (!m_pageManager)
-		throw std::logic_error("Trying to create DataPage with null page manager!");
-
 	auto page = GetNativePage();
 	m_nextPageID = page->GetNextPageID();
 	m_prevPageID = page->GetPrevPageID();
@@ -30,8 +29,8 @@ DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const
 }
 
 DataPage::~DataPage() {
-	if (m_pageManager->PageInCache(m_id))
-		m_pageManager->GetPage(m_id).lock()->Unpin();
+	if (m_pageManager.PageInCache(m_id))
+		m_pageManager.GetPage(m_id).lock()->Unpin();
 }
 
 bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) {
@@ -52,14 +51,19 @@ void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> co
 	auto page = GetNativePage(true);
 	uint16_t const offset = CalculateRecordOffset(number);
 
-	char * data = page->GetData() + offset + 1; // TODO: replace it with sizeof record flags.
+	char * data = page->GetData() + offset;
+	if (*data) // delete bit is set
+		return;
+	data += 1; // TODO: replace by sizeof(flags)
+
 	for (auto const & colVal: colVals) {
 		uint16_t const colOffset = m_columnOffsets[colVal.first];
-		auto const & colDescriptor = m_columnDescriptors[colVal.first];
-		if (colDescriptor.size < colVal.second.length())
-			assert(false && "Too big value length."); // TODO: need raise exception.
-		// TODO: do type check.
-		::memcpy(data + colOffset, colVal.second.c_str(), colVal.second.length());
+		auto const & descriptor = m_columnDescriptors[colVal.first];
+		if (!CheckType(descriptor, colVal.second)) {
+			std::string field(descriptor.name);
+			throw std::runtime_error("Invalid value for field '" + field + "'.");
+		}
+		::memcpy(data + colOffset, colVal.second.data(), colVal.second.length());
 	}
 }
 
@@ -120,9 +124,27 @@ void DataPage::WriteHeader(char * data) {
 }
 
 std::shared_ptr<Page> DataPage::GetNativePage(bool needDirty) const {
-	auto page = m_pageManager->GetPage(m_id).lock();
+	auto page = m_pageManager.GetPage(m_id).lock();
 	page->Pin();
 	if (needDirty)
 		page->SetDirty();
 	return page;
+}
+
+bool DataPage::CheckType(ColumnDescriptor const & descriptor, std::string const & value) {
+	std::stringstream checker(value);
+	if (descriptor.size >= value.length()) {
+		switch (descriptor.type) {
+			case FieldType::FLOAT:
+				float f;
+				return bool(checker >> f);
+			case FieldType::INT:
+				int i;
+				return bool(checker >> i);
+			case FieldType::VARCHAR:
+				return VARCHAR_MAX_LENGTH > value.length();
+		}
+	}
+
+	return false;
 }

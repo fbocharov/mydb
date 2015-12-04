@@ -13,16 +13,15 @@ class ICursor;
 class Table {
 public:
 	Table(PageManager & manager, ColumnDescriptors const & descriptors);
+	Table(ColumnDescriptors const & columnDescriptors, PageManager & pageManager, PageID firstPage);
 
-	static Table Deserialize(Page const & page, PageManager & manager);
+	static std::unique_ptr<Table> Deserialize(Page const & page, PageManager & manager);
 	void Serialize(Page & page);
 
 	void Insert(std::map<std::string, std::string> const & colVals);
 	std::unique_ptr<ICursor> GetCursor();
 
 private:
-	Table(ColumnDescriptors const & columnDescriptors, PageManager & pageManager, PageID firstPage);
-
 	void AddPage();
 
 private:

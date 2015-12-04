@@ -8,7 +8,7 @@
 HeapFile::HeapFile(std::string const & filename, bool existent)
 	: m_file(filename, std::ios_base::in | std::ios_base::out | std::ios_base::binary)
 	, m_freePagesListHead(INVALID_PAGE_ID)
-	, m_maxPageID(0)
+	, m_maxPageID(1) // NOTE: 0 page is system page.
 {
 	if (m_file.fail())
 		throw IOException("Can't open file " + filename + ".");

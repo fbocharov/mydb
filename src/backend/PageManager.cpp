@@ -32,6 +32,11 @@ std::weak_ptr<Page> PageManager::AllocatePage() {
 void PageManager::DeallocatePage(PageID id) {
 	Log(LogType::Info) << "Deallocating page with id = " << id << "." << std::endl;
 
+	if (m_pageCache.end() != m_pageCache.find(id)) {
+		auto page = m_pageCache[id];
+		auto tp = m_pagesLastAccessTime[page];
+		RemovePage(tp, page);
+	}
 	m_heapFile.DeallocatePage(id);
 }
 
