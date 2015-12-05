@@ -16,7 +16,6 @@ install:
     - sudo apt-get install -y g++-5
     - sudo apt-get install -y flex bison
     - sudo apt-get install -y cmake
-    - sudo apt-get -y upgrade
     - sudo update-alternatives --install /usr/bin/g++-5 g++ /usr/bin/g++-5 50
      -sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 50
 
