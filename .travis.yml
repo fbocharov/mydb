@@ -12,7 +12,7 @@ before_install:
     - sudo apt-get -y update
 
 install:
-    - sudo pip install - y cpp-coveralls
+    - sudo pip install -y cpp-coveralls
     - sudo apt-get install -y cppcheck
     - sudo apt-get install -y libgtest-dev
     - sudo apt-get install -y g++-5
