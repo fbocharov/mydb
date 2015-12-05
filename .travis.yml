@@ -30,7 +30,8 @@ before_script:
 script:
     - make
     - "cd ./test ; ctest ; cd -"
-    - ./../analyze_static.sh
+    - cd ..
+    - ./analyze_static.sh
 
 after_success:
-    - coveralls --root .. -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
+    - coveralls --root . -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
