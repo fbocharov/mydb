@@ -20,13 +20,20 @@ set(BIN_SOURCES
 
 INCLUDE_DIRECTORIES(
 	${CMAKE_SOURCE_DIR}/src
-	${Boost_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME} ${BIN_SOURCES})
-add_library(${PROJECT_NAME}.lib STATIC ${LIB_SOURCES})
+add_executable(${PROJECT_NAME}
+	${BIN_SOURCES}
+)
+
+set(LIBRARY_NAME ${PROJECT_NAME}.lib)
+
+add_library(${LIBRARY_NAME} STATIC ${LIB_SOURCES})
+
+include(generate_sql_parser)
+add_dependencies(${PROJECT_NAME} SQLGen)
+add_dependencies(${LIBRARY_NAME} SQLGen)
 
 target_link_libraries(${PROJECT_NAME}
-	${Boost_LIBRARIES}
 	-lstdc++fs
 )

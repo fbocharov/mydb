@@ -18,9 +18,14 @@ int main(int argc, char * argv[]) {
 		std::getline(std::cin, userInput);
 		try {
 			auto statement = SQLParser::Instance().ParseStatement(userInput);
+			if (!statement) { // input == quit/exit
+				std::cout << "Goodbye!" << std::endl;
+				break;
+			}
 		} catch (SQLParserException const & e) {
 			std::cerr << "ERROR: " << e.what() << std::endl;
 			Log(LogType::Error) << "Exception while parsing " << userInput << ": " << e.what() << std::endl;
+			return 1;
 		}
 	}
 
