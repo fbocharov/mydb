@@ -8,7 +8,7 @@ enable_testing()
 find_package(GTest REQUIRED)
 
 if(NOT GTEST_FOUND)
-	message(FATAL_ERROR "GTest can't be found.")
+	message(FATAL_ERROR "GTest not found. Can't run any tests.")
 endif()
 
 include_directories(
@@ -24,3 +24,6 @@ target_link_libraries(${PROJECT_NAME}
 	pthread
 	mydb.lib
 )
+
+enable_testing()
+add_test(ALL ${PROJECT_NAME})
