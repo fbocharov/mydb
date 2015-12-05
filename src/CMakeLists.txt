@@ -7,11 +7,15 @@ add_subdirectory(core)
 add_subdirectory(sql)
 add_subdirectory(utils)
 
+include(generate_sql_parser)
+
 set(LIB_SOURCES
 	${BACKEND_SOURCES}
 	${CORE_SOURCES}
 	${SQL_SOURCES}
 	${UTILS_SOURCES}
+	${FLEX_OUTPUT}
+	${BISON_OUTPUT}
 )
 set(BIN_SOURCES
 	${LIB_SOURCES}
@@ -30,7 +34,6 @@ set(LIBRARY_NAME ${PROJECT_NAME}.lib)
 
 add_library(${LIBRARY_NAME} STATIC ${LIB_SOURCES})
 
-include(generate_sql_parser)
 add_dependencies(${PROJECT_NAME} SQLGen)
 add_dependencies(${LIBRARY_NAME} SQLGen)
 

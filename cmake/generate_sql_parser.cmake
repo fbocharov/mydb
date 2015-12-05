@@ -6,7 +6,7 @@ find_package(FLEX REQUIRED)
 set(BISON_INPUT ${CMAKE_SOURCE_DIR}/src/sql/sql.ypp)
 set(BISON_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/SQLParserInternals.cpp)
 set(FLEX_INPUT ${CMAKE_SOURCE_DIR}/src/sql/sql.lex)
-set(FLEX_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/SQLLexerInternals.cpp)
+set(FLEX_OUTPUT ${CMAKE_SOURCE_DIR}/src/sql/SQLScannerInternals.cpp)
 set(FLEX_HEADER ${CMAKE_SOURCE_DIR}/src/sql/SQLScannerInternals.hpp)
 
 if(BISON_FOUND)
