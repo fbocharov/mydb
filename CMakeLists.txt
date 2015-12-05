@@ -18,4 +18,4 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG -D_DEBUG -Wall -pedantic -Wno-long-lo
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fno-omit-frame-pointer -D_NDEBUG -Wall -pedantic -Wno-long-long -std=c++1y" CACHE STRING "Release options." FORCE)
 
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(test)
