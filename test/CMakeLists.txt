@@ -4,9 +4,7 @@ project(mydb_test)
 
 file(GLOB_RECURSE SOURCES "main.cpp" "*Test.cpp")
 
-enable_testing()
 find_package(GTest REQUIRED)
-
 if(NOT GTEST_FOUND)
 	message(FATAL_ERROR "GTest not found. Can't run any tests.")
 endif()
