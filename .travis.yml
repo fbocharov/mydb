@@ -28,4 +28,4 @@ before_script:
 script:
     - make
     - ctest
-    - ./../analize_static.sh
+    - ./../analyze_static.sh
