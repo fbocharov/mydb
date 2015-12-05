@@ -9,8 +9,6 @@
 #include "SQLParserInternals.hpp"
 #include "SQLScannerInternals.hpp"
 
-int yyparse(void);
-
 /// Used by generated code to return parsed statement.
 ISQLStatement * parsedStatement;
 
