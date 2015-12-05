@@ -20,7 +20,6 @@ set(BIN_SOURCES
 
 INCLUDE_DIRECTORIES(
 	${CMAKE_SOURCE_DIR}/src
-	${Boost_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME}
@@ -36,6 +35,5 @@ add_dependencies(${PROJECT_NAME} SQLGen)
 add_dependencies(${LIBRARY_NAME} SQLGen)
 
 target_link_libraries(${PROJECT_NAME}
-	${Boost_LIBRARIES}
 	-lstdc++fs
 )
