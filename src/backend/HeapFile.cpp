@@ -79,7 +79,7 @@ void HeapFile::WriteHeader() {
 	NumberToBytes(m_freePagesListHead, buf + sizeof(MAGIC) + sizeof(m_maxPageID));
 	try {
 		m_file.seekp(0, std::ios_base::beg);
-		m_file.read(buf, HEADER_SIZE);
+		m_file.write(buf, HEADER_SIZE);
 	} catch (std::ifstream::failure const & e) {
 		throw IOException(e.what());
 	}
