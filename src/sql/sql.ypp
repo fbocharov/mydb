@@ -28,7 +28,7 @@ extern ISQLStatement * parsedStatement;
 %token VALUES
 %token CREATE
 %token INT
-%token FLOAT
+%token DOUBLE
 %token VARCHAR
 %token TABLE
 %token EXIT
@@ -68,12 +68,12 @@ extern ISQLStatement * parsedStatement;
 %%
 NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER FLOAT ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::FLOAT));
+            | IDENTIFIER DOUBLE ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
             | IDENTIFIER VARCHAR ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
             | IDENTIFIER INT                   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));     }
-            | IDENTIFIER FLOAT                 { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::FLOAT));   }
+            | IDENTIFIER DOUBLE                 { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE)); }
             | IDENTIFIER VARCHAR               { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR)); }
             ;
 CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateStatement($3, *$5); delete $5; }

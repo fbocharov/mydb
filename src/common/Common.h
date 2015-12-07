@@ -8,7 +8,7 @@
 
 enum class FieldType : std::uint8_t {
 	INT,
-	FLOAT,
+	DOUBLE,
 	VARCHAR
 };
 

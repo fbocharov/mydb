@@ -31,7 +31,7 @@ table        return TABLE;
 "*"          return *yytext;
 ";"          return *yytext;
 "int"        return INT;
-"float"      return FLOAT;
+"double"     return DOUBLE;
 "varchar"    return VARCHAR;
 "exit"       return EXIT;
 "quit"       return EXIT;
