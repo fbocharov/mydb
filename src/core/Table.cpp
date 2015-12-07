@@ -60,9 +60,9 @@ void Table::Serialize(Page & page) {
 	NumberToBytes(m_firstPageID, data);
 }
 
-void Table::Insert(std::map<std::string, std::string> const & colVals) {
-	if (colVals.size() != m_columnDescriptors.size()) {
-		Log(LogType::Error) << "Trying to insert record of length " << colVals.size()
+bool Table::Insert(std::vector<std::string> const & values) {
+	if (values.size() != m_columnDescriptors.size()) {
+		Log(LogType::Error) << "Trying to insert record of length " << values.size()
 							<< " into table with " << m_columnDescriptors.size() << " columns."
 							<< std::endl;
 		throw std::logic_error("Incorrect number of fields.");
@@ -71,7 +71,7 @@ void Table::Insert(std::map<std::string, std::string> const & colVals) {
 	if (!m_pageWithSpace->HasFreeSpace())
 		AddPage();
 
-	m_pageWithSpace->AppendRecord(colVals);
+	return m_pageWithSpace->AppendRecord(values);
 }
 
 std::unique_ptr<ICursor> Table::GetCursor() {
