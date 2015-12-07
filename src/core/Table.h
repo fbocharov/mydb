@@ -5,8 +5,9 @@
 #include <string>
 #include <memory>
 
+#include <common/Common.h>
+
 #include "DataPage.h"
-#include "Common.h"
 
 class ICursor;
 

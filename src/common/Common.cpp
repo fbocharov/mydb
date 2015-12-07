@@ -4,6 +4,13 @@
 
 #include "Common.h"
 
+ColumnDescriptor::ColumnDescriptor(char const * nm, FieldType tp)
+	: type(tp)
+	, size(strlen(nm))
+{
+	strncpy(name, nm, size);
+}
+
 ColumnDescriptor ColumnDescriptor::Deserialize(char const * data) {
 	ColumnDescriptor descriptor;
 

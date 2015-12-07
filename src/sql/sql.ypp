@@ -2,8 +2,10 @@
 
 #include <string>
 #include <vector>
-#include <utility>
 #include <cstddef>
+#include <cstring>
+
+#include "../common/Common.h"
 
 #include "SQLStatement.h"
 #include "SQLParserException.h"
@@ -26,7 +28,7 @@ extern ISQLStatement * parsedStatement;
 %token VALUES
 %token CREATE
 %token INT
-%token FLOAT
+%token DOUBLE
 %token VARCHAR
 %token TABLE
 %token EXIT
@@ -36,7 +38,7 @@ extern ISQLStatement * parsedStatement;
 %union{
     char * string_v;
     std::vector<std::string> * s_vector;
-    std::vector<std::pair<std::string, std::string>> * nt_vector;
+    ColumnDescriptors * nt_vector;
     std::nullptr_t nulltype;
     SelectStatement * select_statement;
     CreateStatement * create_table_statement;
@@ -64,32 +66,32 @@ extern ISQLStatement * parsedStatement;
 %start STATEMENT
 
 %%
-NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<std::pair<std::string, std::string>>(1, {$1, "INT"});
-                                                   $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER FLOAT ',' NT_VECTOR   { $$ = new std::vector<std::pair<std::string, std::string>>(1, {$1, "FLOAT"});
-                                                   $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER VARCHAR ',' NT_VECTOR { $$ = new std::vector<std::pair<std::string, std::string>>(1, {$1, "VARCHAR"});
-                                                   $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER INT                     { $$ = new std::vector<std::pair<std::string, std::string>>(1, {$1, "INT"});     }
-            | IDENTIFIER FLOAT                   { $$ = new std::vector<std::pair<std::string, std::string>>(1, {$1, "FLOAT"});   }
-            | IDENTIFIER VARCHAR                 { $$ = new std::vector<std::pair<std::string, std::string>>(1, {$1, "VARCHAR"}); }
+NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));
+                                                 $$->insert($$->end(), $4->begin(), $4->end()); }
+            | IDENTIFIER DOUBLE ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE));
+                                                 $$->insert($$->end(), $4->begin(), $4->end()); }
+            | IDENTIFIER VARCHAR ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR));
+                                                 $$->insert($$->end(), $4->begin(), $4->end()); }
+            | IDENTIFIER INT                   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));     }
+            | IDENTIFIER DOUBLE                 { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE)); }
+            | IDENTIFIER VARCHAR               { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR)); }
             ;
-CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')'         { $$ = new CreateStatement($3, *$5); delete $5; }
+CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateStatement($3, *$5); delete $5; }
             ;
-S_FIELDS    : '*'                                              { $$ = new std::vector<std::string>(); }
+S_FIELDS    : '*' { $$ = new std::vector<std::string>(); }
             ;
-SELECT_S    : SELECT S_FIELDS FROM IDENTIFIER                   { $$ = new SelectStatement($4, *$2); delete $2; }
+SELECT_S    : SELECT S_FIELDS FROM IDENTIFIER { $$ = new SelectStatement($4, *$2); delete $2; }
             ;
-I_FIELDS    : IDENTIFIER                   { $$ = new std::vector<std::string>(1, $1); }
-            | IDENTIFIER ',' I_FIELDS    { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
+I_FIELDS    : IDENTIFIER              { $$ = new std::vector<std::string>(1, $1); }
+            | IDENTIFIER ',' I_FIELDS { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
             ;
-INSERT_S    : INSERT INTO IDENTIFIER VALUES '(' I_FIELDS ')'    { $$ = new InsertStatement($3, *$6); delete $6; }
+INSERT_S    : INSERT INTO IDENTIFIER VALUES '(' I_FIELDS ')' { $$ = new InsertStatement($3, *$6); delete $6; }
             ;
 EXIT_S      : EXIT { $$ = nullptr; }
             ;
-STATEMENT   : SELECT_S ';'    { parsedStatement = $1; $$ = parsedStatement; }
-            | INSERT_S ';'    { parsedStatement = $1; $$ = parsedStatement; }
-            | CREATE_T_S ';'  { parsedStatement = $1; $$ = parsedStatement; }
-            | EXIT_S          { parsedStatement = $1; $$ = parsedStatement; }
+STATEMENT   : SELECT_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
+            | INSERT_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
+            | CREATE_T_S ';' { parsedStatement = $1; $$ = parsedStatement; }
+            | EXIT_S         { parsedStatement = $1; $$ = parsedStatement; }
             ;
 %%

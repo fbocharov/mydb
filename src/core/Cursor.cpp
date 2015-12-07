@@ -1,6 +1,6 @@
 #include <backend/PageManager.h>
+#include <common/Common.h>
 
-#include "Common.h"
 #include "Cursor.h"
 
 ICursor::ICursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors)

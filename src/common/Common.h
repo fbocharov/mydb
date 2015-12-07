@@ -4,10 +4,11 @@
 #include <cstdint>
 #include <cstddef>
 #include <vector>
+#include <cstring>
 
 enum class FieldType : std::uint8_t {
 	INT,
-	FLOAT,
+	DOUBLE,
 	VARCHAR
 };
 
@@ -15,6 +16,9 @@ static size_t constexpr VARCHAR_MAX_LENGTH = 128; // should be less than uint8_t
 static size_t constexpr COLUMN_NAME_LENGTH = 64;
 
 struct ColumnDescriptor {
+	ColumnDescriptor() = default;
+	ColumnDescriptor(char const * nm, FieldType tp);
+
 	static ColumnDescriptor Deserialize(char const * data);
 	void Serialize(char * data);
 

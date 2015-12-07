@@ -135,9 +135,9 @@ bool DataPage::CheckType(ColumnDescriptor const & descriptor, std::string const 
 	std::stringstream checker(value);
 	if (descriptor.size >= value.length()) {
 		switch (descriptor.type) {
-			case FieldType::FLOAT:
-				float f;
-				return bool(checker >> f);
+			case FieldType::DOUBLE:
+				double d;
+				return bool(checker >> d);
 			case FieldType::INT:
 				int i;
 				return bool(checker >> i);
