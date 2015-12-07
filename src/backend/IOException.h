@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-class IOException : std::logic_error {
+class IOException : public std::logic_error {
 public:
 	IOException(std::string const & msg)
 		: std::logic_error(msg)

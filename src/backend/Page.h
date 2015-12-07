@@ -6,6 +6,8 @@
 typedef std::uint32_t PageID;
 static PageID constexpr INVALID_PAGE_ID = -1;
 
+class HeapFile;
+
 class Page {
 public:
 	static size_t constexpr PAGE_SIZE = 4096;
@@ -34,6 +36,8 @@ private:
 	PageID m_id;
 	bool m_isDirty;
 	bool m_isPinned;
+
+	friend class HeapFile;
 };
 
 #endif // Page_h

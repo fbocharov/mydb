@@ -6,10 +6,13 @@
 #include "IOException.h"
 
 HeapFile::HeapFile(std::string const & filename, bool existent)
-	: m_file(filename, std::ios_base::in | std::ios_base::out | std::ios_base::binary)
-	, m_freePagesListHead(INVALID_PAGE_ID)
+	: m_freePagesListHead(INVALID_PAGE_ID)
 	, m_maxPageID(1) // NOTE: 0 page is system page.
 {
+	auto flags = std::ios_base::in | std::ios_base::out | std::ios_base::binary;
+	if (!existent)
+		flags |= std::ios_base::trunc;
+	m_file = std::fstream(filename, flags);
 	if (m_file.fail())
 		throw IOException("Can't open file " + filename + ".");
 	m_file.exceptions(std::ios_base::eofbit | std::ios_base::failbit | std::ios_base::badbit);
@@ -17,6 +20,8 @@ HeapFile::HeapFile(std::string const & filename, bool existent)
 
 	if (existent)
 		ReadHeader();
+	else
+		WriteHeader();
 }
 
 HeapFile::~HeapFile() {
@@ -39,7 +44,7 @@ void HeapFile::ReadPage(std::shared_ptr<Page> page) {
 	uint16_t const offset = CalculatePageOffset(pageID);
 	try {
 		m_file.seekg(offset, std::ios_base::beg);
-		m_file.read(page->GetData(), Page::PAGE_SIZE);
+		m_file.read(page->m_data, Page::PAGE_SIZE);
 	} catch (std::ifstream::failure const & e) {
 		throw IOException(e.what());
 	}
@@ -50,7 +55,7 @@ void HeapFile::WritePage(std::shared_ptr<Page> page) {
 	uint16_t const offset = CalculatePageOffset(pageID);
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
-		m_file.write(page->GetData(), Page::PAGE_SIZE);
+		m_file.write(page->m_data, Page::PAGE_SIZE);
 	} catch (std::ofstream::failure const & e) {
 		throw IOException(e.what());
 	}
