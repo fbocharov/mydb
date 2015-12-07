@@ -17,7 +17,7 @@ static size_t constexpr COLUMN_NAME_LENGTH = 64;
 
 struct ColumnDescriptor {
 	ColumnDescriptor() = default;
-	ColumnDescriptor(char const * nm, FieldType tp);
+	ColumnDescriptor(char const * nm, FieldType tp, std::uint8_t sz);
 
 	static ColumnDescriptor Deserialize(char const * data);
 	void Serialize(char * data);

@@ -4,13 +4,14 @@
 
 #include "Common.h"
 
-ColumnDescriptor::ColumnDescriptor(char const * nm, FieldType tp)
+ColumnDescriptor::ColumnDescriptor(char const * nm, FieldType tp, uint8_t sz)
 	: type(tp)
-	, size(strlen(nm))
+	, size(sz)
 {
 	size_t const nmSize = strlen(nm);
-	size_t const nameSize = nmSize > COLUMN_NAME_LENGTH ? COLUMN_NAME_LENGTH : nmSize;
+	size_t const nameSize = nmSize + 1 >= COLUMN_NAME_LENGTH ? COLUMN_NAME_LENGTH : nmSize;
 	strncpy(name, nm, nameSize);
+	name[nameSize] = '\0';
 }
 
 ColumnDescriptor ColumnDescriptor::Deserialize(char const * data) {

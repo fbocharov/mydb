@@ -66,15 +66,15 @@ extern ISQLStatement * parsedStatement;
 %start STATEMENT
 
 %%
-NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));
+NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT, 4));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER DOUBLE ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE));
+            | IDENTIFIER DOUBLE ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE, 8));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER VARCHAR ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR));
+            | IDENTIFIER VARCHAR ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR, 128));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER INT                   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));     }
-            | IDENTIFIER DOUBLE                 { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE)); }
-            | IDENTIFIER VARCHAR               { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR)); }
+            | IDENTIFIER INT                   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT, 4));       }
+            | IDENTIFIER DOUBLE                 { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE, 8));   }
+            | IDENTIFIER VARCHAR               { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR, 128)); }
             ;
 CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateStatement($3, *$5); delete $5; }
             ;
