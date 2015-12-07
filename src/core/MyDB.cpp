@@ -1,5 +1,6 @@
 #include <experimental/filesystem>
 #include <cstdint>
+#include <cassert>
 
 #include <utils/Utils.h>
 
@@ -18,24 +19,36 @@ MyDB::~MyDB() {
 	SaveTables();
 }
 
-void MyDB::ExecuteStatement(std::unique_ptr<ISQLStatement> statement) {
+bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> statement) {
+	// TODO: add create index statement here.
 	switch (statement->GetType()) {
 		case SQLStatementType::CREATE: {
 			auto const & create = static_cast<CreateStatement &>(*statement);
-			ExecuteCreateStatement(create);
-			break;
+			return ExecuteCreateStatement(create);
 		}
+		default:
+			throw std::runtime_error("Unknown create statement.");
+	}
+}
+
+size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> statement) {
+	// TODO: add update and delete statements here.
+	switch (statement->GetType()) {
 		case SQLStatementType::INSERT: {
 			auto const & insert = static_cast<InsertStatement &>(*statement);
-			ExecuteInsertStatement(insert);
-			break;
+			return ExecuteInsertStatement(insert) ? 1 : 0;
 		}
-		case SQLStatementType::SELECT: {
-			auto const & select = static_cast<SelectStatement &>(*statement);
-			ExecuteSelectStatement(select);
-			break;
-		}
+		default:
+			throw std::runtime_error("Unknown update statement.");
 	}
+}
+
+std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> statement) {
+	if (SQLStatementType::SELECT != statement->GetType())
+		throw std::runtime_error("Can't execute non select query.");
+
+	auto & table = FindTable(statement->GetTableName());
+	return table.GetCursor();
 }
 
 void MyDB::LoadTables() {
@@ -84,11 +97,25 @@ void MyDB::SaveTables() {
 	}
 }
 
-void MyDB::ExecuteCreateStatement(CreateStatement const & statement) {
+bool MyDB::ExecuteCreateStatement(CreateStatement const & statement) {
+	auto const & columns = statement.GetColumns();
+	for (auto const & column: columns)
+		if (strlen(column.name) > COLUMN_NAME_LENGTH)
+			throw std::runtime_error("Column name should be less than " +
+				std::to_string(COLUMN_NAME_LENGTH) + "symbols.");
+
+	m_tables[statement.GetTableName()] = std::make_unique<Table>(*m_pageManager, columns);
+	return true;
 }
 
-void MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
+bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
+	auto & table = FindTable(statement.GetTableName());
+	return table.Insert(statement.GetValues());
 }
 
-void MyDB::ExecuteSelectStatement(SelectStatement const & statement) {
+Table & MyDB::FindTable(std::string const & name) {
+	auto it = m_tables.find(name);
+	if (m_tables.end() == it)
+		throw std::runtime_error("Table with name " + name + " does not exist.");
+	return *it->second;
 }
