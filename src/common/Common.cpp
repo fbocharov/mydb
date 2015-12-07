@@ -8,7 +8,9 @@ ColumnDescriptor::ColumnDescriptor(char const * nm, FieldType tp)
 	: type(tp)
 	, size(strlen(nm))
 {
-	strncpy(name, nm, size);
+	size_t const nmSize = strlen(nm);
+	size_t const nameSize = nmSize > COLUMN_NAME_LENGTH ? COLUMN_NAME_LENGTH : nmSize;
+	strncpy(name, nm, nameSize);
 }
 
 ColumnDescriptor ColumnDescriptor::Deserialize(char const * data) {
