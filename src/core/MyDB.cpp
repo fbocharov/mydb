@@ -19,7 +19,12 @@ MyDB::~MyDB() {
 	SaveTables();
 }
 
-bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> statement) {
+ColumnDescriptors const & MyDB::GetTableDescription(std::string const & tableName) const {
+	return FindTable(tableName).GetDescription();
+}
+
+
+bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
 	// TODO: add create index statement here.
 	switch (statement->GetType()) {
 		case SQLStatementType::CREATE: {
@@ -31,7 +36,7 @@ bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> statement) {
 	}
 }
 
-size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> statement) {
+size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
 	// TODO: add update and delete statements here.
 	switch (statement->GetType()) {
 		case SQLStatementType::INSERT: {
@@ -43,7 +48,7 @@ size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> statement) {
 	}
 }
 
-std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> statement) {
+std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement) {
 	if (SQLStatementType::SELECT != statement->GetType())
 		throw std::runtime_error("Can't execute non select query.");
 
@@ -75,7 +80,8 @@ void MyDB::LoadTables() {
 }
 
 void MyDB::SaveTables() {
-	char * data = m_pageManager->GetPage(SYSTEM_PAGE_ID).lock()->GetData();
+	auto systemPage = m_pageManager->GetPage(SYSTEM_PAGE_ID).lock();
+	char * data = systemPage->GetData();
 
 	uint32_t tablesCount = m_tables.size();
 	NumberToBytes(tablesCount, data);
@@ -94,7 +100,9 @@ void MyDB::SaveTables() {
 		NumberToBytes(tablePage->GetID(), data);
 		auto const & table = nameTable.second;
 		table->Serialize(*tablePage);
+		tablePage->SetDirty();
 	}
+	systemPage->SetDirty();
 }
 
 bool MyDB::ExecuteCreateStatement(CreateStatement const & statement) {
@@ -113,7 +121,7 @@ bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
 	return table.Insert(statement.GetValues());
 }
 
-Table & MyDB::FindTable(std::string const & name) {
+Table & MyDB::FindTable(std::string const & name) const {
 	auto it = m_tables.find(name);
 	if (m_tables.end() == it)
 		throw std::runtime_error("Table with name " + name + " does not exist.");
