@@ -33,12 +33,20 @@ DataPage::~DataPage() {
 		m_pageManager.GetPage(m_id).lock()->Unpin();
 }
 
-bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) {
+bool DataPage::AppendRecord(std::vector<std::string> const & values) {
 	if (!HasFreeSpace())
 		return false;
 
+	std::map<std::string, std::string> colVal;
+	size_t i = 0;
+	for (auto const & it: m_columnDescriptors) {
+		auto const & column = it.first;
+		auto const & value = values[i++];
+		colVal[column] = value;
+	}
+
 	auto page = GetNativePage(true);
-	UpdateRecord(m_recordCount, colVals);
+	UpdateRecord(m_recordCount, colVal);
 
 	++m_recordCount;
 	m_freeSpaceOffset += m_recordLength;

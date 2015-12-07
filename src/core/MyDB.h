@@ -9,18 +9,21 @@
 #include <sql/SQLStatement.h>
 
 #include "Table.h"
+#include "Cursor.h"
 
 class MyDB {
 public:
 	MyDB(std::string const & filename);
 	~MyDB();
 
-	void ExecuteStatement(std::unique_ptr<ISQLStatement> statement);
+	bool ExecuteCreate(std::unique_ptr<ISQLStatement> statement);
+	size_t ExecuteUpdate(std::unique_ptr<ISQLStatement> statement);
+	std::unique_ptr<ICursor> ExecuteQuery(std::unique_ptr<ISQLStatement> statement);
 
 private:
-	void ExecuteCreateStatement(CreateStatement const & statement);
-	void ExecuteInsertStatement(InsertStatement const & statement);
-	void ExecuteSelectStatement(SelectStatement const & statement);
+	bool ExecuteCreateStatement(CreateStatement const & statement);
+	bool ExecuteInsertStatement(InsertStatement const & statement);
+	Table & FindTable(std::string const & name);
 	void LoadTables();
 	void SaveTables();
 

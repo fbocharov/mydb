@@ -19,7 +19,7 @@ public:
 	DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors);
 	~DataPage();
 
-	bool AppendRecord(const std::map<std::string, std::string> &colVals);
+	bool AppendRecord(std::vector<std::string> const & values);
 	void UpdateRecord(size_t number, const std::map<std::string, std::string> &colVals);
 	void DeleteRecord(size_t number);
 	Record GetRecord(size_t number);
