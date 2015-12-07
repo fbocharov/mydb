@@ -10,7 +10,7 @@ std::string InputReader::Read() {
 	std::string input;
 	std::string tmp;
 	size_t endlCount = 0;
-	while (endlCount != 2) {
+	while (endlCount != 1) {
 		std::getline(m_stream, tmp);
 		if (tmp == "")
 			++endlCount;
