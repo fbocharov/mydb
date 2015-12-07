@@ -36,11 +36,12 @@ private:
 	void WriteHeader(char * data);
 	std::shared_ptr<Page> GetNativePage(bool needDirty = false) const;
 	bool CheckType(ColumnDescriptor const & descriptor, std::string const & value);
+	ColumnDescriptor const & FindDescriptor(std::string const & name);
 
 private:
 	PageManager & m_pageManager;
 	PageID m_id;
-	std::map<std::string, ColumnDescriptor> m_columnDescriptors;
+	ColumnDescriptors m_columnDescriptors;
 	std::map<std::string, uint16_t> m_columnOffsets;
 	// Caching them so it would not cause page fault when calling getters.
 	PageID m_prevPageID;

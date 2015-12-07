@@ -19,6 +19,7 @@ public:
 	static std::unique_ptr<Table> Deserialize(Page const & page, PageManager & manager);
 	void Serialize(Page & page);
 
+	ColumnDescriptors const & GetDescription() const;
 	bool Insert(std::vector<std::string> const & values);
 	std::unique_ptr<ICursor> GetCursor();
 

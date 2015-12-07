@@ -12,6 +12,7 @@
 DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors)
 	: m_pageManager(manager)
 	, m_id(pageID)
+	, m_columnDescriptors(descrpitors)
 	, m_recordLength(0)
 {
 	auto page = GetNativePage();
@@ -20,7 +21,6 @@ DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const
 
 	m_recordLength = 1; // TODO: replace it with sizeof record flags.
 	for (auto const & descriptor: descrpitors) {
-		m_columnDescriptors[descriptor.name] = descriptor;
 		m_columnOffsets[descriptor.name] = m_recordLength;
 		m_recordLength += descriptor.size;
 	}
@@ -38,10 +38,9 @@ bool DataPage::AppendRecord(std::vector<std::string> const & values) {
 		return false;
 
 	std::map<std::string, std::string> colVal;
-	size_t i = 0;
-	for (auto const & it: m_columnDescriptors) {
-		auto const & column = it.first;
-		auto const & value = values[i++];
+	for (size_t i = 0; i < m_columnDescriptors.size(); ++i) {
+		std::string column = m_columnDescriptors[i].name;
+		auto const & value = values[i];
 		colVal[column] = value;
 	}
 
@@ -66,7 +65,7 @@ void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> co
 
 	for (auto const & colVal: colVals) {
 		uint16_t const colOffset = m_columnOffsets[colVal.first];
-		auto const & descriptor = m_columnDescriptors[colVal.first];
+		auto const & descriptor = FindDescriptor(colVal.first);
 		if (!CheckType(descriptor, colVal.second)) {
 			std::string field(descriptor.name);
 			throw std::runtime_error("Invalid value for field '" + field + "'.");
@@ -155,4 +154,11 @@ bool DataPage::CheckType(ColumnDescriptor const & descriptor, std::string const 
 	}
 
 	return false;
+}
+
+ColumnDescriptor const & DataPage::FindDescriptor(std::string const & name) {
+	for (auto const & desc: m_columnDescriptors)
+		if (desc.name == name)
+			return desc;
+	throw std::runtime_error("There is no column " + name);
 }

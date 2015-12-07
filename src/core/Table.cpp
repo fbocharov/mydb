@@ -60,6 +60,11 @@ void Table::Serialize(Page & page) {
 	NumberToBytes(m_firstPageID, data);
 }
 
+ColumnDescriptors const & Table::GetDescription() const {
+	return m_columnDescriptors;
+}
+
+
 bool Table::Insert(std::vector<std::string> const & values) {
 	if (values.size() != m_columnDescriptors.size()) {
 		Log(LogType::Error) << "Trying to insert record of length " << values.size()
