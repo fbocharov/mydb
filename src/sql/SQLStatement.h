@@ -5,6 +5,8 @@
 #include <string>
 #include <utility>
 
+#include <common/Common.h>
+
 enum class SQLStatementType {
 	CREATE,
 	SELECT,
@@ -38,17 +40,17 @@ private:
 
 class CreateStatement : public ISQLStatement {
 public:
-	CreateStatement(std::string const & tableName, std::vector<std::pair<std::string, std::string>> const & columnTypes)
+	CreateStatement(std::string const & tableName, ColumnDescriptors const & columns)
 		: ISQLStatement(SQLStatementType::CREATE, tableName)
-		, m_columnTypes(columnTypes)
+		, m_columns(columns)
 	{}
 
-	std::vector<std::pair<std::string, std::string>> const & GetColumnTypes() const {
-		return m_columnTypes;
+	ColumnDescriptors const & GetColumns() const {
+		return m_columns;
 	}
 
 private:
-	std::vector<std::pair<std::string, std::string>> m_columnTypes; /// first -- name, second -- type
+	ColumnDescriptors m_columns; /// first -- name, second -- type
 };
 
 

@@ -6,8 +6,8 @@
 #include <memory>
 
 #include <backend/Page.h>
+#include <common/Common.h>
 
-#include "Common.h"
 #include "Record.h"
 
 using std::uint16_t;

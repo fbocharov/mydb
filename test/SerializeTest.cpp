@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include <core/Common.h>
+#include <common/Common.h>
 
 TEST(SerializeTest, ColumnDescriptorSerializeTest) {
 	char const * name = "users";

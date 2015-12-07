@@ -4,6 +4,7 @@ project(mydb)
 
 add_subdirectory(backend)
 add_subdirectory(core)
+add_subdirectory(common)
 add_subdirectory(sql)
 add_subdirectory(utils)
 
@@ -12,6 +13,7 @@ include(generate_sql_parser)
 set(LIB_SOURCES
 	${BACKEND_SOURCES}
 	${CORE_SOURCES}
+	${COMMON_SOURCES}
 	${SQL_SOURCES}
 	${UTILS_SOURCES}
 	${FLEX_OUTPUT}

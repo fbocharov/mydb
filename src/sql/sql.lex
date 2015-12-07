@@ -2,6 +2,8 @@
 #include <cstring>
 #include <cstddef>
 
+#include "../common/Common.h"
+
 #include "SQLStatement.h"
 #include "SQLParserException.h"
 
