@@ -9,7 +9,7 @@
 
 #include "SQLParserInternals.hpp"
 
-int yyerror(const char *);
+void yyerror(const char *);
 int yylex(void);
 
 %}
