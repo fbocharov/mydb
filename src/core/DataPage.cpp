@@ -61,7 +61,6 @@ void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> co
 	char * data = page->GetData() + offset;
 	if (*data) // delete bit is set
 		return;
-	data += 1; // TODO: replace by sizeof(flags)
 
 	for (auto const & colVal: colVals) {
 		uint16_t const colOffset = m_columnOffsets[colVal.first];
