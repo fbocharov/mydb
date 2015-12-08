@@ -80,9 +80,9 @@ int main(int argc, char * argv[]) {
 				Log(LogType::Error) << "Exception in main: " << e.what() << std::endl;
 			}
 		}
-	} catch (IOException const & e) {
+	} catch (std::exception const & e) {
 		std::cerr << "FATAL ERROR: " << e.what() << std::endl;
-		Log(LogType::Error) << "IOException: " << e.what() << std::endl;
+		Log(LogType::Error) << "std::exception: " << e.what() << std::endl;
 		return 1;
 	}
 
