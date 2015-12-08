@@ -56,12 +56,15 @@ void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> co
 		return;
 
 	for (auto const & colVal: colVals) {
-		uint16_t const colOffset = m_columnOffsets[colVal.first];
 		auto const & descriptor = FindDescriptor(colVal.first);
 		if (!colVal.second.empty() && !CheckType(descriptor, colVal.second)) {
 			std::string field(descriptor.name);
 			throw std::runtime_error("Invalid value for field '" + field + "'.");
 		}
+	}
+	// Values should be inserted after check that all of them are valid.
+	for (auto const & colVal: colVals) {
+		uint16_t const colOffset = m_columnOffsets[colVal.first];
 		::memcpy(data + colOffset, colVal.second.data(), colVal.second.length());
 	}
 }
@@ -112,7 +115,7 @@ void DataPage::ReadHeader(char const * data) {
 	// it must contain zeros but not memory trash. If not empty it must contain
 	// valid info.
 	BytesToNumber(data, m_recordCount);
-	data += sizeof(uint16_t);
+	data += sizeof(m_recordCount);
 	BytesToNumber(data, m_freeSpaceOffset);
 }
 
