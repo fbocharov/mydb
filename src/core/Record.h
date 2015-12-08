@@ -19,8 +19,8 @@ public:
 
 	std::vector<std::string> const & GetValues() const;
 
-	std::string & operator[] (std::string const & key);
-	std::string const & operator[] (std::string const & key) const;
+//	std::string & operator[] (std::string const & key);
+//	std::string const & operator[] (std::string const & key) const;
 
 private:
 	DataPage & m_parentPage;

@@ -21,20 +21,20 @@ std::vector<std::string> const & Record::GetValues() const {
 }
 
 
-std::string & Record::operator[] (std::string const & key) {
-	auto it = m_columnValue.find(key);
-	if (m_columnValue.end() == it)
-		throw std::runtime_error("Record don't contain key " + key);
-	m_isDirty = true;
-	return *it->second;
-}
+//std::string & Record::operator[] (std::string const & key) {
+//	auto it = m_columnValue.find(key);
+//	if (m_columnValue.end() == it)
+//		throw std::runtime_error("Record don't contain key " + key);
+//	m_isDirty = true;
+//	return *it->second;
+//}
 
-std::string const & Record::operator[] (std::string const & key) const {
-	auto it = m_columnValue.find(key);
-	if (m_columnValue.end() == it)
-		throw std::runtime_error("Record don't contain key " + key);
-	return *it->second;
-}
+//std::string const & Record::operator[] (std::string const & key) const {
+//	auto it = m_columnValue.find(key);
+//	if (m_columnValue.end() == it)
+//		throw std::runtime_error("Record don't contain key " + key);
+//	return *it->second;
+//}
 
 Record::~Record() {
 //	if (m_isDirty)
