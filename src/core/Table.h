@@ -20,7 +20,7 @@ public:
 	void Serialize(Page & page);
 
 	ColumnDescriptors const & GetDescription() const;
-	bool Insert(std::vector<std::string> const & values);
+	bool Insert(std::vector<std::string> const & columns, std::vector<std::string> const & values);
 	std::unique_ptr<ICursor> GetCursor();
 
 private:

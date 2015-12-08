@@ -118,7 +118,7 @@ bool MyDB::ExecuteCreateStatement(CreateStatement const & statement) {
 
 bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
 	auto & table = FindTable(statement.GetTableName());
-	return table.Insert(statement.GetValues());
+	return table.Insert(statement.GetColumns(), statement.GetValues());
 }
 
 Table & MyDB::FindTable(std::string const & name) const {

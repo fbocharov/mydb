@@ -18,26 +18,29 @@ int yylex(void);
 
 %%
 
-select       return SELECT;
-from         return FROM;
-insert       return INSERT;
-into         return INTO;
-values       return VALUES;
-create       return CREATE;
-table        return TABLE;
-"("          return *yytext;
-")"          return *yytext;
-","          return *yytext;
-"*"          return *yytext;
-";"          return *yytext;
-"int"        return INT;
-"double"     return DOUBLE;
-"varchar"    return VARCHAR;
-"exit"       return EXIT;
-"quit"       return EXIT;
-[a-z0-9]+    { yylval.string_v = strdup(yytext); return IDENTIFIER; }
-[ \t]        {}
-\r           {}
-.            { yyerror("Unknown Character"); return UNKNOWN_TOKEN; }
+select            return SELECT;
+from              return FROM;
+insert            return INSERT;
+into              return INTO;
+values            return VALUES;
+create            return CREATE;
+table             return TABLE;
+"("               return *yytext;
+")"               return *yytext;
+","               return *yytext;
+"*"               return *yytext;
+";"               return *yytext;
+"int"             return INT;
+"double"          return DOUBLE;
+"varchar"         return VARCHAR;
+"exit"            return EXIT;
+"quit"            return EXIT;
+[0-9]+            { yylval.string_v = strdup(yytext); return INT_NUM;    }
+[0-9]+.[0-9]+     { yylval.string_v = strdup(yytext); return DOUBLE_NUM; }
+\"[\sa-z0-9]+\"   { yylval.string_v = strdup(yytext); return WORD;       }
+[a-z]+[a-z0-9_]*  { yylval.string_v = strdup(yytext); return IDENTIFIER; }
+[ \t]             {}
+\r                {}
+.                 { yyerror("Unknown Character"); return UNKNOWN_TOKEN; }
 
 %%

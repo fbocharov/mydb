@@ -33,19 +33,12 @@ DataPage::~DataPage() {
 		m_pageManager.GetPage(m_id).lock()->Unpin();
 }
 
-bool DataPage::AppendRecord(std::vector<std::string> const & values) {
+bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) {
 	if (!HasFreeSpace())
 		return false;
 
-	std::map<std::string, std::string> colVal;
-	for (size_t i = 0; i < m_columnDescriptors.size(); ++i) {
-		std::string column = m_columnDescriptors[i].name;
-		auto const & value = values[i];
-		colVal[column] = value;
-	}
-
 	auto page = GetNativePage(true);
-	UpdateRecord(m_recordCount, colVal);
+	UpdateRecord(m_recordCount, colVals);
 
 	++m_recordCount;
 	m_freeSpaceOffset += m_recordLength;
@@ -65,7 +58,7 @@ void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> co
 	for (auto const & colVal: colVals) {
 		uint16_t const colOffset = m_columnOffsets[colVal.first];
 		auto const & descriptor = FindDescriptor(colVal.first);
-		if (!CheckType(descriptor, colVal.second)) {
+		if (!colVal.second.empty() && !CheckType(descriptor, colVal.second)) {
 			std::string field(descriptor.name);
 			throw std::runtime_error("Invalid value for field '" + field + "'.");
 		}
