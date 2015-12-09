@@ -16,9 +16,10 @@ Table::Table(PageManager & manager, ColumnDescriptors const & descriptors)
 	firstPage->SetNextPageID(INVALID_PAGE_ID);
 	firstPage->SetPrevPageID(firstPage->GetID());
 	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, m_firstPageID, m_columnDescriptors);
+	firstPage->SetDirty();
 }
 
-Table::Table(ColumnDescriptors const & columnDescriptors, PageManager & pageManager, PageID firstPage)
+Table::Table(PageManager & pageManager, ColumnDescriptors const & columnDescriptors, PageID firstPage)
 	: m_columnDescriptors(columnDescriptors)
 	, m_pageManager(pageManager)
 	, m_firstPageID(firstPage)
@@ -43,7 +44,7 @@ std::unique_ptr<Table> Table::Deserialize(Page const & page, PageManager & manag
 	PageID firstPageID = 0;
 	BytesToNumber(data, firstPageID);
 
-	return std::make_unique<Table>(descriptors, manager, firstPageID);
+	return std::make_unique<Table>(manager, descriptors, firstPageID);
 }
 
 void Table::Serialize(Page & page) {
