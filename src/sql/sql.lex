@@ -37,7 +37,7 @@ int yylex(void);
 "quit"            return EXIT;
 [0-9]+            { yylval.string_v = strdup(yytext); return INT_NUM;    }
 [0-9]+\.[0-9]+    { yylval.string_v = strdup(yytext); return DOUBLE_NUM; }
-\"[\sa-z0-9]+\"   { yylval.string_v = strdup(yytext); return WORD;       }
+\"[ \ta-z0-9]+\"   { yylval.string_v = strdup(yytext); return WORD;       }
 [a-z]+[a-z0-9_]*  { yylval.string_v = strdup(yytext); return IDENTIFIER; }
 [ \t]             {}
 \r                {}
