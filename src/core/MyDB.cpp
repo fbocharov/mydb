@@ -98,7 +98,7 @@ void MyDB::SaveTables() {
 
 		auto tablePage = m_pageManager->AllocatePage().lock();
 		NumberToBytes(tablePage->GetID(), data);
-		auto const & table = nameTable.second;
+		auto & table = nameTable.second;
 		table->Serialize(*tablePage);
 		tablePage->SetDirty();
 	}
