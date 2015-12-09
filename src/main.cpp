@@ -17,10 +17,8 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 	auto tableDescription = db.GetTableDescription(statement->GetTableName());
 
 	printer.PrintHeading(tableDescription);
-	while (cursor->HasNext()) {
+	while (cursor->Next())
 		printer.PrintLine(cursor->Get().GetValues());
-		cursor->Next();
-	}
 }
 
 void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, CSVPrinter & printer) {
