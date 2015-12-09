@@ -1,13 +1,13 @@
 #include "Record.h"
 #include "DataPage.h"
 
-Record::Record(DataPage & parentPage, uint16_t number, char const * data,
+Record::Record(DataPage & parentPage, size_t number, char const * data,
 		ColumnDescriptors const & descriptors)
 	: m_parentPage(parentPage)
 	, m_number(number)
 	, m_isDirty(false)
 {
-	uint16_t offset = 1; // TODO: replace by sizeof flags.
+	size_t offset = 1; // TODO: replace by sizeof flags.
 	for (auto const & desc: descriptors) {
 		uint8_t const size = desc.size;
 		m_values.push_back(std::string(data + offset, size));

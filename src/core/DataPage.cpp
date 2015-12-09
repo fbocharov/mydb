@@ -49,7 +49,7 @@ bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) 
 
 void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> const & colVals) {
 	auto page = GetNativePage(true);
-	uint16_t const offset = CalculateRecordOffset(number);
+	size_t const offset = CalculateRecordOffset(number);
 
 	char * data = page->GetData() + offset;
 	if (*data) // delete bit is set
@@ -64,13 +64,13 @@ void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> co
 	}
 	// Values should be inserted after check that all of them are valid.
 	for (auto const & colVal: colVals) {
-		uint16_t const colOffset = m_columnOffsets[colVal.first];
+		size_t const colOffset = m_columnOffsets[colVal.first];
 		::memcpy(data + colOffset, colVal.second.data(), colVal.second.length());
 	}
 }
 
 void DataPage::DeleteRecord(size_t number) {
-	uint16_t const offset = CalculateRecordOffset(number);
+	size_t const offset = CalculateRecordOffset(number);
 
 	char * recordData = GetNativePage(true)->GetData() + offset;
 	*recordData = 1; // Raising up delete bit. TODO: make constant for delete bit.
@@ -78,15 +78,15 @@ void DataPage::DeleteRecord(size_t number) {
 
 Record DataPage::GetRecord(size_t number) {
 	if (m_recordCount <= number)
-		throw std::out_of_range("Trying to access record with too big number.");
+		throw std::out_of_range("Trying to access record with number " + std::to_string(number) + ".");
 
-	uint16_t const offset = CalculateRecordOffset(number);
+	size_t const offset = CalculateRecordOffset(number);
 	auto page = GetNativePage();
 
 	return Record(*this, number, page->GetData() + offset, m_columnDescriptors);
 }
 
-uint16_t DataPage::GetRecordCount() const {
+size_t DataPage::GetRecordCount() const {
 	return m_recordCount;
 }
 
@@ -106,7 +106,7 @@ bool DataPage::HasFreeSpace() const {
 	return Page::PAGE_DATA_SIZE >= m_freeSpaceOffset + m_recordLength;
 }
 
-uint16_t DataPage::CalculateRecordOffset(size_t recordNumber) const {
+size_t DataPage::CalculateRecordOffset(size_t recordNumber) const {
 	return HEADER_SIZE + m_recordLength * recordNumber;
 }
 
@@ -121,7 +121,7 @@ void DataPage::ReadHeader(char const * data) {
 
 void DataPage::WriteHeader(char * data) {
 	NumberToBytes(m_recordCount, data);
-	data += sizeof(uint16_t);
+	data += sizeof(m_recordCount);
 	NumberToBytes(m_freeSpaceOffset, data);
 }
 
