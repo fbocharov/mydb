@@ -5,7 +5,7 @@
 #include <memory>
 #include <cstdint>
 
-using std::uint16_t;
+using std::uint64_t;
 
 #include "Page.h"
 
@@ -23,18 +23,20 @@ private:
 	void ReadHeader();
 	void WriteHeader();
 	void ReservePages();
+	void Expand(uint64_t size);
 
 	PageID FreePagesStackPop();
 	void FreePagesStackPush(PageID id);
 
-	uint16_t CalculatePageOffset(PageID pageID) const;
+	uint64_t CalculatePageOffset(PageID pageID) const;
 
 private:
+	std::string m_filename;
 	std::fstream m_file;
 	PageID m_freePagesListHead;
 	PageID m_maxPageID;
 
-	static size_t constexpr RESERVE_PAGE_COUNT = 100;
+	static size_t constexpr RESERVE_PAGE_COUNT = 10;
 	static uint16_t constexpr MAGIC = 0b0101010101010101;
 	static uint16_t constexpr HEADER_SIZE = sizeof(MAGIC) + sizeof(PageID) + sizeof(PageID);
 };
