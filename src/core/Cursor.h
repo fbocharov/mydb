@@ -8,7 +8,6 @@ struct ICursor {
 	virtual Record Get() = 0;
 	/// Returns true if there is next record and moves to it.
 	virtual bool Next() = 0;
-	virtual bool HasNext() const = 0;
 };
 
 #endif // Cursor_h

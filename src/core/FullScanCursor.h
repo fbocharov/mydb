@@ -17,7 +17,9 @@ public:
 	virtual Record Get() override;
 	/// Returns true if there is next record and moves to it.
 	virtual bool Next() override;
-	virtual bool HasNext() const override;
+
+private:
+	bool HasNext() const;
 
 protected:
 	ColumnDescriptors const & m_descriptors;
