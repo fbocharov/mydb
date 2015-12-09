@@ -11,11 +11,11 @@ namespace parser_tests
     ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
     }
 
-    TEST(CreateIndexTests, WrongDontForgetWhereConditionTest) {
+    TEST(DeleteTests, WrongDontForgetWhereConditionTest) {
         ASSERT_THROW(SQLParser::Instance().ParseStatement("delete from table1;"), SQLParserException);
     }
 
-    TEST(CreateIndexTests, WrongDontForgetfromConditionTest) {
+    TEST(DeleteTests, WrongDontForgetfromConditionTest) {
         ASSERT_THROW(SQLParser::Instance().ParseStatement("delete where col = val;"), SQLParserException);
     }
     */
