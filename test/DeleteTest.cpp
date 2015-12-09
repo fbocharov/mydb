@@ -7,8 +7,8 @@ namespace parser_tests
 {
     /* delete statement. Part 2
     TEST(DeleteTests, BasicTest) {
-    auto statement = SQLParser::Instance().ParseStatement("delete from table1 where col = val;");
-    ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
+        auto statement = SQLParser::Instance().ParseStatement("delete from table1 where col = val;");
+        ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
     }
 
     TEST(DeleteTests, WrongDontForgetWhereConditionTest) {
