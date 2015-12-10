@@ -12,6 +12,7 @@
 DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors)
 	: m_pageManager(manager)
 	, m_id(pageID)
+	, m_columnDescriptors(descrpitors)
 	, m_recordLength(0)
 {
 	auto page = GetNativePage();
@@ -20,7 +21,6 @@ DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const
 
 	m_recordLength = 1; // TODO: replace it with sizeof record flags.
 	for (auto const & descriptor: descrpitors) {
-		m_columnDescriptors[descriptor.name] = descriptor;
 		m_columnOffsets[descriptor.name] = m_recordLength;
 		m_recordLength += descriptor.size;
 	}
@@ -33,20 +33,12 @@ DataPage::~DataPage() {
 		m_pageManager.GetPage(m_id).lock()->Unpin();
 }
 
-bool DataPage::AppendRecord(std::vector<std::string> const & values) {
+bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) {
 	if (!HasFreeSpace())
 		return false;
 
-	std::map<std::string, std::string> colVal;
-	size_t i = 0;
-	for (auto const & it: m_columnDescriptors) {
-		auto const & column = it.first;
-		auto const & value = values[i++];
-		colVal[column] = value;
-	}
-
 	auto page = GetNativePage(true);
-	UpdateRecord(m_recordCount, colVal);
+	UpdateRecord(m_recordCount, colVals);
 
 	++m_recordCount;
 	m_freeSpaceOffset += m_recordLength;
@@ -57,26 +49,28 @@ bool DataPage::AppendRecord(std::vector<std::string> const & values) {
 
 void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> const & colVals) {
 	auto page = GetNativePage(true);
-	uint16_t const offset = CalculateRecordOffset(number);
+	size_t const offset = CalculateRecordOffset(number);
 
 	char * data = page->GetData() + offset;
 	if (*data) // delete bit is set
 		return;
-	data += 1; // TODO: replace by sizeof(flags)
 
 	for (auto const & colVal: colVals) {
-		uint16_t const colOffset = m_columnOffsets[colVal.first];
-		auto const & descriptor = m_columnDescriptors[colVal.first];
-		if (!CheckType(descriptor, colVal.second)) {
+		auto const & descriptor = FindDescriptor(colVal.first);
+		if (!colVal.second.empty() && !CheckType(descriptor, colVal.second)) {
 			std::string field(descriptor.name);
 			throw std::runtime_error("Invalid value for field '" + field + "'.");
 		}
+	}
+	// Values should be inserted after check that all of them are valid.
+	for (auto const & colVal: colVals) {
+		size_t const colOffset = m_columnOffsets[colVal.first];
 		::memcpy(data + colOffset, colVal.second.data(), colVal.second.length());
 	}
 }
 
 void DataPage::DeleteRecord(size_t number) {
-	uint16_t const offset = CalculateRecordOffset(number);
+	size_t const offset = CalculateRecordOffset(number);
 
 	char * recordData = GetNativePage(true)->GetData() + offset;
 	*recordData = 1; // Raising up delete bit. TODO: make constant for delete bit.
@@ -84,15 +78,15 @@ void DataPage::DeleteRecord(size_t number) {
 
 Record DataPage::GetRecord(size_t number) {
 	if (m_recordCount <= number)
-		throw std::out_of_range("Trying to access record with too big number.");
+		throw std::out_of_range("Trying to access record with number " + std::to_string(number) + ".");
 
-	uint16_t const offset = CalculateRecordOffset(number);
+	size_t const offset = CalculateRecordOffset(number);
 	auto page = GetNativePage();
 
 	return Record(*this, number, page->GetData() + offset, m_columnDescriptors);
 }
 
-uint16_t DataPage::GetRecordCount() const {
+size_t DataPage::GetRecordCount() const {
 	return m_recordCount;
 }
 
@@ -112,7 +106,7 @@ bool DataPage::HasFreeSpace() const {
 	return Page::PAGE_DATA_SIZE >= m_freeSpaceOffset + m_recordLength;
 }
 
-uint16_t DataPage::CalculateRecordOffset(size_t recordNumber) const {
+size_t DataPage::CalculateRecordOffset(size_t recordNumber) const {
 	return HEADER_SIZE + m_recordLength * recordNumber;
 }
 
@@ -121,13 +115,13 @@ void DataPage::ReadHeader(char const * data) {
 	// it must contain zeros but not memory trash. If not empty it must contain
 	// valid info.
 	BytesToNumber(data, m_recordCount);
-	data += sizeof(uint16_t);
+	data += sizeof(m_recordCount);
 	BytesToNumber(data, m_freeSpaceOffset);
 }
 
 void DataPage::WriteHeader(char * data) {
 	NumberToBytes(m_recordCount, data);
-	data += sizeof(uint16_t);
+	data += sizeof(m_recordCount);
 	NumberToBytes(m_freeSpaceOffset, data);
 }
 
@@ -155,4 +149,11 @@ bool DataPage::CheckType(ColumnDescriptor const & descriptor, std::string const 
 	}
 
 	return false;
+}
+
+ColumnDescriptor const & DataPage::FindDescriptor(std::string const & name) {
+	for (auto const & desc: m_columnDescriptors)
+		if (desc.name == name)
+			return desc;
+	throw std::runtime_error("There is no column " + name);
 }

@@ -32,6 +32,9 @@ extern ISQLStatement * parsedStatement;
 %token VARCHAR
 %token TABLE
 %token EXIT
+%token <string_v> INT_NUM
+%token <string_v> DOUBLE_NUM
+%token <string_v> WORD
 %token <string_v> IDENTIFIER
 %token UNKNOWN_TOKEN
 
@@ -48,6 +51,7 @@ extern ISQLStatement * parsedStatement;
 
 %type <nt_vector> NT_VECTOR
 %type <s_vector> S_FIELDS
+%type <s_vector> I_COLUMNS
 %type <s_vector> I_FIELDS
 %type <select_statement> SELECT_S
 %type <create_table_statement> CREATE_T_S
@@ -66,15 +70,15 @@ extern ISQLStatement * parsedStatement;
 %start STATEMENT
 
 %%
-NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));
+NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT, 4));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER DOUBLE ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE));
+            | IDENTIFIER DOUBLE ',' NT_VECTOR   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE, 8));
                                                  $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER VARCHAR ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR));
-                                                 $$->insert($$->end(), $4->begin(), $4->end()); }
-            | IDENTIFIER INT                   { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT));     }
-            | IDENTIFIER DOUBLE                 { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE)); }
-            | IDENTIFIER VARCHAR               { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR)); }
+            | IDENTIFIER VARCHAR '(' INT_NUM ')' ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR, atoi($4)));
+                                                 $$->insert($$->end(), $7->begin(), $7->end()); }
+            | IDENTIFIER INT                     { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::INT, 4));       }
+            | IDENTIFIER DOUBLE                  { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::DOUBLE, 8));   }
+            | IDENTIFIER VARCHAR '(' INT_NUM ')' { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, FieldType::VARCHAR, atoi($4))); }
             ;
 CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateStatement($3, *$5); delete $5; }
             ;
@@ -82,10 +86,18 @@ S_FIELDS    : '*' { $$ = new std::vector<std::string>(); }
             ;
 SELECT_S    : SELECT S_FIELDS FROM IDENTIFIER { $$ = new SelectStatement($4, *$2); delete $2; }
             ;
-I_FIELDS    : IDENTIFIER              { $$ = new std::vector<std::string>(1, $1); }
-            | IDENTIFIER ',' I_FIELDS { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
+I_FIELDS    : WORD                    { $$ = new std::vector<std::string>(1, $1); }
+            | INT_NUM                 { $$ = new std::vector<std::string>(1, $1); }
+            | DOUBLE_NUM              { $$ = new std::vector<std::string>(1, $1); }
+            | WORD ',' I_FIELDS { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
+            | INT_NUM ',' I_FIELDS { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
+            | DOUBLE_NUM ',' I_FIELDS { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
+            ;
+I_COLUMNS   : IDENTIFIER ',' I_COLUMNS { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); }
+            | IDENTIFIER               { $$ = new std::vector<std::string>(1, $1); }
             ;
 INSERT_S    : INSERT INTO IDENTIFIER VALUES '(' I_FIELDS ')' { $$ = new InsertStatement($3, *$6); delete $6; }
+			| INSERT INTO IDENTIFIER '(' I_COLUMNS ')' VALUES '(' I_FIELDS ')' { $$ = new InsertStatement($3, *$5, *$9); delete $5; delete $9; }
             ;
 EXIT_S      : EXIT { $$ = nullptr; }
             ;

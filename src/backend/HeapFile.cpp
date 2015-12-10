@@ -1,4 +1,5 @@
 #include <cassert>
+#include <experimental/filesystem>
 
 #include <utils/Utils.h>
 
@@ -6,10 +7,14 @@
 #include "IOException.h"
 
 HeapFile::HeapFile(std::string const & filename, bool existent)
-	: m_file(filename, std::ios_base::in | std::ios_base::out | std::ios_base::binary)
+	: m_filename(filename)
 	, m_freePagesListHead(INVALID_PAGE_ID)
 	, m_maxPageID(1) // NOTE: 0 page is system page.
 {
+	auto flags = std::ios_base::in | std::ios_base::out | std::ios_base::binary;
+	if (!existent)
+		flags |= std::ios_base::trunc;
+	m_file = std::fstream(filename, flags);
 	if (m_file.fail())
 		throw IOException("Can't open file " + filename + ".");
 	m_file.exceptions(std::ios_base::eofbit | std::ios_base::failbit | std::ios_base::badbit);
@@ -17,6 +22,10 @@ HeapFile::HeapFile(std::string const & filename, bool existent)
 
 	if (existent)
 		ReadHeader();
+	else {
+		WriteHeader();
+		Expand(Page::PAGE_SIZE); // Reserving space for system page.
+	}
 }
 
 HeapFile::~HeapFile() {
@@ -36,10 +45,10 @@ void HeapFile::DeallocatePage(PageID id) {
 
 void HeapFile::ReadPage(std::shared_ptr<Page> page) {
 	auto const pageID = page->GetID();
-	uint16_t const offset = CalculatePageOffset(pageID);
+	uint64_t const offset = CalculatePageOffset(pageID);
 	try {
 		m_file.seekg(offset, std::ios_base::beg);
-		m_file.read(page->GetData(), Page::PAGE_SIZE);
+		m_file.read(page->m_data, Page::PAGE_SIZE);
 	} catch (std::ifstream::failure const & e) {
 		throw IOException(e.what());
 	}
@@ -47,10 +56,11 @@ void HeapFile::ReadPage(std::shared_ptr<Page> page) {
 
 void HeapFile::WritePage(std::shared_ptr<Page> page) {
 	auto const pageID = page->GetID();
-	uint16_t const offset = CalculatePageOffset(pageID);
+	uint64_t const offset = CalculatePageOffset(pageID);
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
-		m_file.write(page->GetData(), Page::PAGE_SIZE);
+		m_file.write(page->m_data, Page::PAGE_SIZE);
+		m_file.flush();
 	} catch (std::ofstream::failure const & e) {
 		throw IOException(e.what());
 	}
@@ -80,26 +90,29 @@ void HeapFile::WriteHeader() {
 	try {
 		m_file.seekp(0, std::ios_base::beg);
 		m_file.write(buf, HEADER_SIZE);
+		m_file.flush();
 	} catch (std::ifstream::failure const & e) {
 		throw IOException(e.what());
 	}
 }
 
 void HeapFile::ReservePages() {
-	char nulls[Page::PAGE_SIZE] {};
-	m_file.seekp(0, std::ios_base::end);
-	for (size_t i = 0; i < RESERVE_PAGE_COUNT; ++i) {
-		m_file.write(nulls, Page::PAGE_SIZE);
-		FreePagesStackPush(m_maxPageID);
-		++m_maxPageID;
-	}
+	Expand(RESERVE_PAGE_COUNT * Page::PAGE_SIZE);
+	for (size_t i = 0; i < RESERVE_PAGE_COUNT; ++i)
+		FreePagesStackPush(m_maxPageID++);
 }
+
+void HeapFile::Expand(uint64_t size) {
+	auto oldSize = std::experimental::filesystem::file_size(m_filename);
+	std::experimental::filesystem::resize_file(m_filename, oldSize + size);
+}
+
 
 PageID HeapFile::FreePagesStackPop() {
 	assert(INVALID_PAGE_ID != m_freePagesListHead);
 
 	PageID const pageID = m_freePagesListHead;
-	size_t const offset = CalculatePageOffset(m_freePagesListHead + 1) - sizeof(PageID);
+	uint64_t const offset = CalculatePageOffset(m_freePagesListHead) + Page::PAGE_SIZE - sizeof(PageID);
 	char buf[sizeof(PageID)] {};
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
@@ -114,7 +127,7 @@ PageID HeapFile::FreePagesStackPop() {
 void HeapFile::FreePagesStackPush(PageID id) {
 	char buf[sizeof(PageID)] {};
 	NumberToBytes(m_freePagesListHead, buf);
-	size_t const offset = CalculatePageOffset(id + 1) - sizeof(PageID);
+	uint64_t const offset = CalculatePageOffset(id) + Page::PAGE_SIZE - sizeof(PageID);
 	try {
 		m_file.seekp(offset, std::ios_base::beg);
 		m_file.write(buf, sizeof(PageID));
@@ -124,6 +137,10 @@ void HeapFile::FreePagesStackPush(PageID id) {
 	m_freePagesListHead = id;
 }
 
-uint16_t HeapFile::CalculatePageOffset(PageID pageID) const {
-	return HEADER_SIZE + Page::PAGE_SIZE * pageID;
+uint64_t HeapFile::CalculatePageOffset(PageID pageID) const {
+	uint64_t offset = HEADER_SIZE + Page::PAGE_SIZE * pageID;
+	if (std::experimental::filesystem::file_size(m_filename) <= offset)
+		throw IOException("Trying to access page outside file. Page id = " + std::to_string(pageID));
+
+	return offset;
 }

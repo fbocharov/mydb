@@ -72,16 +72,26 @@ private:
 
 class InsertStatement : public ISQLStatement {
 public:
-	InsertStatement(std::string const & tableName, std::vector<std::string> const & values)
+	InsertStatement(std::string const & tableName, std::vector<std::string> const & columns,
+			std::vector<std::string> const & values)
 		: ISQLStatement(SQLStatementType::INSERT, tableName)
+		, m_columns(columns)
 		, m_values(values)
 	{}
+	InsertStatement(std::string const & tableName, std::vector<std::string> const & values)
+		: InsertStatement(tableName, std::vector<std::string>(), values)
+	{}
+
+	std::vector<std::string> const & GetColumns() const {
+		return m_columns;
+	}
 
 	std::vector<std::string> const & GetValues() const {
 		return m_values;
 	}
 
 private:
+	std::vector<std::string> m_columns;
 	std::vector<std::string> m_values;
 };
 

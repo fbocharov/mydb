@@ -16,14 +16,15 @@ public:
 	MyDB(std::string const & filename);
 	~MyDB();
 
-	bool ExecuteCreate(std::unique_ptr<ISQLStatement> statement);
-	size_t ExecuteUpdate(std::unique_ptr<ISQLStatement> statement);
-	std::unique_ptr<ICursor> ExecuteQuery(std::unique_ptr<ISQLStatement> statement);
+	ColumnDescriptors const & GetTableDescription(std::string const & tableName) const;
+	bool ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement);
+	size_t ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement);
+	std::unique_ptr<ICursor> ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement);
 
 private:
 	bool ExecuteCreateStatement(CreateStatement const & statement);
 	bool ExecuteInsertStatement(InsertStatement const & statement);
-	Table & FindTable(std::string const & name);
+	Table & FindTable(std::string const & name) const;
 	void LoadTables();
 	void SaveTables();
 

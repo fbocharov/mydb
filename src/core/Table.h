@@ -14,12 +14,13 @@ class ICursor;
 class Table {
 public:
 	Table(PageManager & manager, ColumnDescriptors const & descriptors);
-	Table(ColumnDescriptors const & columnDescriptors, PageManager & pageManager, PageID firstPage);
+	Table(PageManager & pageManager, ColumnDescriptors const & columnDescriptors, PageID firstPage);
 
 	static std::unique_ptr<Table> Deserialize(Page const & page, PageManager & manager);
 	void Serialize(Page & page);
 
-	bool Insert(std::vector<std::string> const & values);
+	ColumnDescriptors const & GetDescription() const;
+	bool Insert(std::vector<std::string> const & columns, std::vector<std::string> const & values);
 	std::unique_ptr<ICursor> GetCursor();
 
 private:

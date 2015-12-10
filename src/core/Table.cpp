@@ -16,9 +16,10 @@ Table::Table(PageManager & manager, ColumnDescriptors const & descriptors)
 	firstPage->SetNextPageID(INVALID_PAGE_ID);
 	firstPage->SetPrevPageID(firstPage->GetID());
 	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, m_firstPageID, m_columnDescriptors);
+	firstPage->SetDirty();
 }
 
-Table::Table(ColumnDescriptors const & columnDescriptors, PageManager & pageManager, PageID firstPage)
+Table::Table(PageManager & pageManager, ColumnDescriptors const & columnDescriptors, PageID firstPage)
 	: m_columnDescriptors(columnDescriptors)
 	, m_pageManager(pageManager)
 	, m_firstPageID(firstPage)
@@ -43,7 +44,7 @@ std::unique_ptr<Table> Table::Deserialize(Page const & page, PageManager & manag
 	PageID firstPageID = 0;
 	BytesToNumber(data, firstPageID);
 
-	return std::make_unique<Table>(descriptors, manager, firstPageID);
+	return std::make_unique<Table>(manager, descriptors, firstPageID);
 }
 
 void Table::Serialize(Page & page) {
@@ -60,18 +61,37 @@ void Table::Serialize(Page & page) {
 	NumberToBytes(m_firstPageID, data);
 }
 
-bool Table::Insert(std::vector<std::string> const & values) {
-	if (values.size() != m_columnDescriptors.size()) {
-		Log(LogType::Error) << "Trying to insert record of length " << values.size()
-							<< " into table with " << m_columnDescriptors.size() << " columns."
+ColumnDescriptors const & Table::GetDescription() const {
+	return m_columnDescriptors;
+}
+
+
+bool Table::Insert(std::vector<std::string> const & columns, std::vector<std::string> const & values) {
+	if (columns.size() != values.size() && m_columnDescriptors.size() != values.size()) {
+		Log(LogType::Error) << "Trying to insert " << values.size() << " values"
+							<< " into " << columns.size() << " columns. "
+							<< "Table has " << m_columnDescriptors.size() << " columns."
 							<< std::endl;
-		throw std::logic_error("Incorrect number of fields.");
+		throw std::runtime_error("Different number of values and columns.");
 	}
 
 	if (!m_pageWithSpace->HasFreeSpace())
 		AddPage();
 
-	return m_pageWithSpace->AppendRecord(values);
+	std::map<std::string, std::string> colVals;
+	if (columns.empty())
+		for (size_t i = 0; i < m_columnDescriptors.size(); ++i) {
+			auto const & desc = m_columnDescriptors[i];
+			colVals[desc.name] = values[i];
+		}
+	else {
+		for (auto const & desc: m_columnDescriptors)
+			colVals[desc.name] = "";
+		for (size_t i = 0; i < columns.size(); ++i)
+			colVals[columns[i]] = values[i];
+	}
+
+	return m_pageWithSpace->AppendRecord(colVals);
 }
 
 std::unique_ptr<ICursor> Table::GetCursor() {

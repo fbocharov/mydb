@@ -29,8 +29,9 @@ before_script:
 
 script:
     - make
-    - "cd ./test ; ctest ; cd -"
-    - cd ..
+    - cd ./test 
+    - ctest  
+    - cd ../..
     - ./analyze_static.sh
 
 after_success:
