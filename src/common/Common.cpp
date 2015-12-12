@@ -5,6 +5,12 @@
 #include "Common.h"
 #include "Record.h"
 
+ColumnDescriptor::ColumnDescriptor()
+	: name{}
+	, type(ValueType::UNKNOWN)
+	, size(0)
+{}
+
 ColumnDescriptor::ColumnDescriptor(char const * nm, ValueType tp, uint8_t sz)
 	: name{}
 	, type(tp)
