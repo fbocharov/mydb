@@ -3,8 +3,9 @@
 #include <utils/Utils.h>
 
 #include "Common.h"
+#include "Record.h"
 
-ColumnDescriptor::ColumnDescriptor(char const * nm, FieldType tp, uint8_t sz)
+ColumnDescriptor::ColumnDescriptor(char const * nm, ValueType tp, uint8_t sz)
 	: name{}
 	, type(tp)
 	, size(sz)

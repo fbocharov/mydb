@@ -18,6 +18,4 @@ namespace utils_tests
         for (size_t i = 0; i < sizeof(size_t); ++i)
             ASSERT_EQ(0, buf[i]);
     }
-};
-
-
+}

@@ -23,13 +23,17 @@ ColumnDescriptors const & MyDB::GetTableDescription(std::string const & tableNam
 	return FindTable(tableName).GetDescription();
 }
 
-
 bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
-	// TODO: add create index statement here.
+	assert(statement);
+
 	switch (statement->GetType()) {
-		case SQLStatementType::CREATE: {
-			auto const & create = static_cast<CreateStatement &>(*statement);
-			return ExecuteCreateStatement(create);
+		case SQLStatementType::CREATE_TABLE: {
+			auto const & create = static_cast<CreateTableStatement &>(*statement);
+			return ExecuteCreateTableStatement(create);
+		}
+		case SQLStatementType::CREATE_INDEX: {
+			auto const & create = static_cast<CreateIndexStatement &>(*statement);
+			return ExecuteCreateIndexStatement(create);
 		}
 		default:
 			throw std::runtime_error("Unknown create statement.");
@@ -37,11 +41,17 @@ bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
 }
 
 size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
-	// TODO: add update and delete statements here.
+	assert(statement);
+
+	// TODO: add update statement here.
 	switch (statement->GetType()) {
 		case SQLStatementType::INSERT: {
 			auto const & insert = static_cast<InsertStatement &>(*statement);
 			return ExecuteInsertStatement(insert) ? 1 : 0;
+		}
+		case SQLStatementType::DELETE: {
+			auto const & del = static_cast<DeleteStatement &>(*statement);
+			return ExecuteDeleteStatement(del);
 		}
 		default:
 			throw std::runtime_error("Unknown update statement.");
@@ -49,10 +59,16 @@ size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
 }
 
 std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement) {
+	assert(statement);
+
 	if (SQLStatementType::SELECT != statement->GetType())
 		throw std::runtime_error("Can't execute non select query.");
 
-	auto & table = FindTable(statement->GetTableName());
+	auto const & select = static_cast<SelectStatement const &>(*statement);
+	auto & table = FindTable(select.GetTableName());
+
+	if (select.HasConditions())
+		return table.GetCursor(select.GetConditions());
 	return table.GetCursor();
 }
 
@@ -105,20 +121,48 @@ void MyDB::SaveTables() {
 	systemPage->SetDirty();
 }
 
-bool MyDB::ExecuteCreateStatement(CreateStatement const & statement) {
+bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const & statement) {
 	auto const & columns = statement.GetColumns();
-	for (auto const & column: columns)
-		if (strlen(column.name) > COLUMN_NAME_LENGTH)
+	size_t headerSize = 0;
+	for (auto const & column: columns) {
+		size_t nameLen = strlen(column.name);
+		if (nameLen > COLUMN_NAME_LENGTH)
 			throw std::runtime_error("Column name should be less than " +
 				std::to_string(COLUMN_NAME_LENGTH) + "symbols.");
+		headerSize += ColumnDescriptor::DESCRIPTOR_SIZE;
+	}
+	if (headerSize > Page::PAGE_DATA_SIZE)
+		throw std::runtime_error("Too big record length.");
 
-	m_tables[statement.GetTableName()] = std::make_unique<Table>(*m_pageManager, columns);
+	std::string const & tableName = statement.GetTableName();
+	if (m_tables.find(tableName) != m_tables.end())
+		throw std::runtime_error("Table with name \"" + tableName + "\" already exist.");
+
+	m_tables[tableName] = std::make_unique<Table>(*m_pageManager, columns);
+
 	return true;
+}
+
+bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement) {
+	assert(false && "Create index not implemented.");
+	return false;
 }
 
 bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
 	auto & table = FindTable(statement.GetTableName());
 	return table.Insert(statement.GetColumns(), statement.GetValues());
+}
+
+size_t MyDB::ExecuteDeleteStatement(DeleteStatement const & statement) {
+//	assert(false && "Delete not implemented.");
+	auto & table = FindTable(statement.GetTableName());
+	auto cursor = table.GetCursor(statement.GetConditions());
+	size_t deleted = 0;
+	while (cursor->Next()) {
+		cursor->Delete();
+		++deleted;
+	}
+	return deleted;
 }
 
 Table & MyDB::FindTable(std::string const & name) const {

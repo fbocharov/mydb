@@ -9,22 +9,22 @@ namespace parser_tests
 {
     TEST(ParserCommonTests, AllTypesSupportTest) {
         auto statement = SQLParser::Instance().ParseStatement("create table mytable(field1 int, field2 double, field3 varchar(2));");
-        ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
+        ASSERT_NE(dynamic_cast<CreateTableStatement*>(statement.get()), nullptr);
     }
 
     TEST(ParserCommonTests, SpecialTableNameTest) {
         auto statement = SQLParser::Instance().ParseStatement("create table my_table(field1 int);");
-        ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
+        ASSERT_NE(dynamic_cast<CreateTableStatement*>(statement.get()), nullptr);
     }
 
     TEST(ParserCommonTests, CaseIgnoreTest) {
         auto statement = SQLParser::Instance().ParseStatement("CReaTe tAble mYtable(field1 int, field2 double);");
-        ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
+        ASSERT_NE(dynamic_cast<CreateTableStatement*>(statement.get()), nullptr);
     }
 
     TEST(ParserCommonTests, SpacesIgnoreTest) {
         auto statement = SQLParser::Instance().ParseStatement("    create  table    mytable    (   field1    int,    field2    double,    field3    varchar(   2  )  )  ;   ");
-        ASSERT_NE(dynamic_cast<CreateStatement*>(statement.get()), nullptr);
+        ASSERT_NE(dynamic_cast<CreateTableStatement*>(statement.get()), nullptr);
     }
 
     TEST(ParserCommonTests, WrongTableNameTest) {

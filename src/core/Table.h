@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <common/Common.h>
+#include <common/Condition.h>
 
 #include "DataPage.h"
 
@@ -20,8 +21,8 @@ public:
 	void Serialize(Page & page);
 
 	ColumnDescriptors const & GetDescription() const;
-	bool Insert(std::vector<std::string> const & columns, std::vector<std::string> const & values);
-	std::unique_ptr<ICursor> GetCursor();
+	bool Insert(std::vector<std::string> const & columns, const Values &values);
+	std::unique_ptr<ICursor> GetCursor(std::vector<Condition> const & conditions = std::vector<Condition>());
 
 private:
 	void AddPage();

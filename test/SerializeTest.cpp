@@ -11,7 +11,7 @@ TEST(SerializeTest, ColumnDescriptorSerializeTest) {
 	ColumnDescriptor before;
 	before.size = strlen(name);
 	memcpy(before.name, name, before.size);
-	before.type = FieldType::VARCHAR;
+	before.type = ValueType::VARCHAR;
 	before.Serialize(buf);
 
 	ColumnDescriptor after = ColumnDescriptor::Deserialize(buf);
@@ -22,7 +22,7 @@ TEST(SerializeTest, ColumnDescriptorSerializeTest) {
 	memset(buf, 0, ColumnDescriptor::DESCRIPTOR_SIZE);
 	before.size = strlen(name);
 	memcpy(before.name, name, before.size);
-	before.type = FieldType::VARCHAR;
+	before.type = ValueType::VARCHAR;
 	before.Serialize(buf);
 
 	after = ColumnDescriptor::Deserialize(buf);

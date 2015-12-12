@@ -16,23 +16,23 @@ void CSVPrinter::PrintHeading(ColumnDescriptors const & descriptors) {
 	m_stream << std::endl;
 }
 
-void CSVPrinter::PrintLine(std::vector<std::string> const & values) {
+void CSVPrinter::PrintLine(Values const & values) {
 	for (size_t i = 0; i < values.size(); ++i) {
-		m_stream << values[i];
+		m_stream << values[i].value;
 		if (i + 1 != values.size())
 			m_stream << ",";
 	}
 	m_stream << std::endl;
 }
 
-std::string CSVPrinter::GetTypeStr(FieldType type) {
+std::string CSVPrinter::GetTypeStr(ValueType type) {
 	// TODO: cache return values.
 	switch (type) {
-		case FieldType::INT:
+		case ValueType::INT:
 			return "int";
-		case FieldType::DOUBLE:
+		case ValueType::DOUBLE:
 			return "double";
-		case FieldType::VARCHAR:
+		case ValueType::VARCHAR:
 			return "varchar";
 		default:
 			return "unknown";

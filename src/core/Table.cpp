@@ -66,7 +66,7 @@ ColumnDescriptors const & Table::GetDescription() const {
 }
 
 
-bool Table::Insert(std::vector<std::string> const & columns, std::vector<std::string> const & values) {
+bool Table::Insert(std::vector<std::string> const & columns, Values const & values) {
 	if (columns.size() != values.size() && m_columnDescriptors.size() != values.size()) {
 		Log(LogType::Error) << "Trying to insert " << values.size() << " values"
 							<< " into " << columns.size() << " columns. "
@@ -78,7 +78,7 @@ bool Table::Insert(std::vector<std::string> const & columns, std::vector<std::st
 	if (!m_pageWithSpace->HasFreeSpace())
 		AddPage();
 
-	std::map<std::string, std::string> colVals;
+	std::map<std::string, Value> colVals;
 	if (columns.empty())
 		for (size_t i = 0; i < m_columnDescriptors.size(); ++i) {
 			auto const & desc = m_columnDescriptors[i];
@@ -86,7 +86,7 @@ bool Table::Insert(std::vector<std::string> const & columns, std::vector<std::st
 		}
 	else {
 		for (auto const & desc: m_columnDescriptors)
-			colVals[desc.name] = "";
+			colVals[desc.name] = Value{desc.type, ""};
 		for (size_t i = 0; i < columns.size(); ++i)
 			colVals[columns[i]] = values[i];
 	}
@@ -94,8 +94,8 @@ bool Table::Insert(std::vector<std::string> const & columns, std::vector<std::st
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<ICursor> Table::GetCursor() {
-	return std::make_unique<FullScanCursor>(m_pageManager, m_firstPageID, m_columnDescriptors);
+std::unique_ptr<ICursor> Table::GetCursor(std::vector<Condition> const & conditions) {
+	return std::make_unique<FullScanCursor>(m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
 }
 
 void Table::AddPage() {

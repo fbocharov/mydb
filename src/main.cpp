@@ -23,12 +23,14 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 
 void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, CSVPrinter & printer) {
 	switch (statement->GetType()) {
-		case SQLStatementType::CREATE: {
+		case SQLStatementType::CREATE_TABLE:
+		case SQLStatementType::CREATE_INDEX: {
 			if (db.ExecuteCreate(statement))
 				std::cout << "OK" << std::endl;
 			break;
 		}
-		case SQLStatementType::INSERT: {
+		case SQLStatementType::INSERT:
+		case SQLStatementType::DELETE: {
 			size_t rows = db.ExecuteUpdate(statement);
 			std::cout << "OK " << rows << std::endl;
 			break;

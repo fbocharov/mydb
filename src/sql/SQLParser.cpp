@@ -20,8 +20,11 @@ SQLParser & SQLParser::Instance() {
 std::unique_ptr<ISQLStatement> SQLParser::ParseStatement(std::string const & statement) {
 	std::string lowerStmt;
 	std::transform(statement.begin(), statement.end(), std::back_inserter(lowerStmt), tolower);
-	yy_scan_string(lowerStmt.c_str());
-	if (yyparse())
+	auto result = yy_scan_string(lowerStmt.c_str());
+	if (yyparse()) {
+		yy_delete_buffer(result);
 		throw SQLParserException("Unknown command!");
+	}
+	yy_delete_buffer(result);
 	return std::unique_ptr<ISQLStatement>(parsedStatement);
 }

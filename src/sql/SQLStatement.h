@@ -6,13 +6,16 @@
 #include <utility>
 
 #include <common/Common.h>
+#include <common/Condition.h>
 
 enum class SQLStatementType {
-	CREATE,
+	CREATE_TABLE,
+	CREATE_INDEX,
 	SELECT,
-	INSERT
+	INSERT,
+	UPDATE,
+	DELETE
 };
-
 
 class ISQLStatement {
 public:
@@ -37,11 +40,29 @@ private:
 	std::string const m_tableName;
 };
 
-
-class CreateStatement : public ISQLStatement {
+class WithConditions {
 public:
-	CreateStatement(std::string const & tableName, ColumnDescriptors const & columns)
-		: ISQLStatement(SQLStatementType::CREATE, tableName)
+	WithConditions(std::vector<Condition> const & clauses)
+		: m_clauses(clauses)
+	{}
+	virtual ~WithConditions() = default;
+
+	bool HasConditions() const {
+		return !m_clauses.empty();
+	}
+
+	std::vector<Condition> const & GetConditions() const {
+		return m_clauses;
+	}
+
+private:
+	std::vector<Condition> m_clauses;
+};
+
+class CreateTableStatement : public ISQLStatement {
+public:
+	CreateTableStatement(std::string const & tableName, ColumnDescriptors const & columns)
+		: ISQLStatement(SQLStatementType::CREATE_TABLE, tableName)
 		, m_columns(columns)
 	{}
 
@@ -50,14 +71,43 @@ public:
 	}
 
 private:
-	ColumnDescriptors m_columns; /// first -- name, second -- type
+	ColumnDescriptors const m_columns; /// first -- name, second -- type
 };
 
-
-class SelectStatement : public ISQLStatement {
+class CreateIndexStatement : public ISQLStatement {
 public:
-	SelectStatement(std::string const & tableName, std::vector<std::string> const & fields)
+	CreateIndexStatement(std::string const & tableName, std::string const & indexName,
+			std::vector<std::string> const & columns, bool isUnique = false)
+		: ISQLStatement(SQLStatementType::CREATE_INDEX, tableName)
+		, m_name(indexName)
+		, m_columns(columns)
+		, m_isUnique(isUnique)
+	{}
+
+	std::string const & GetName() const {
+		return m_name;
+	}
+
+	std::vector<std::string> const & GetColumns() const {
+		return m_columns;
+	}
+
+	bool IsUnique() const {
+		return m_isUnique;
+	}
+
+private:
+	std::string const m_name;
+	std::vector<std::string> const m_columns;
+	bool const m_isUnique;
+};
+
+class SelectStatement : public ISQLStatement, public WithConditions {
+public:
+	SelectStatement(std::string const & tableName, std::vector<std::string> const & fields,
+			std::vector<Condition> const & clause = std::vector<Condition>())
 		: ISQLStatement(SQLStatementType::SELECT, tableName)
+		, WithConditions(clause)
 		, m_fields(fields)
 	{}
 
@@ -66,19 +116,18 @@ public:
 	}
 
 private:
-	std::vector<std::string> m_fields;
+	std::vector<std::string> const m_fields;
 };
-
 
 class InsertStatement : public ISQLStatement {
 public:
 	InsertStatement(std::string const & tableName, std::vector<std::string> const & columns,
-			std::vector<std::string> const & values)
+			Values const & values)
 		: ISQLStatement(SQLStatementType::INSERT, tableName)
 		, m_columns(columns)
 		, m_values(values)
 	{}
-	InsertStatement(std::string const & tableName, std::vector<std::string> const & values)
+	InsertStatement(std::string const & tableName, Values const & values)
 		: InsertStatement(tableName, std::vector<std::string>(), values)
 	{}
 
@@ -86,13 +135,21 @@ public:
 		return m_columns;
 	}
 
-	std::vector<std::string> const & GetValues() const {
+	Values const & GetValues() const {
 		return m_values;
 	}
 
 private:
-	std::vector<std::string> m_columns;
-	std::vector<std::string> m_values;
+	std::vector<std::string> const m_columns;
+	Values const m_values;
+};
+
+class DeleteStatement : public ISQLStatement, public WithConditions {
+public:
+	DeleteStatement(std::string const & tableName, std::vector<Condition> const & clause)
+		: ISQLStatement(SQLStatementType::DELETE, tableName)
+		, WithConditions(clause)
+	{}
 };
 
 #endif // SQLStatement_h
