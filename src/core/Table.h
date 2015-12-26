@@ -22,7 +22,7 @@ public:
 
 	ColumnDescriptors const & GetDescription() const;
 	bool Insert(std::vector<std::string> const & columns, const Values &values);
-	std::unique_ptr<ICursor> GetCursor(std::vector<Condition> const & conditions = std::vector<Condition>());
+	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
 
 private:
 	void AddPage();

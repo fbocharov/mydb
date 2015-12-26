@@ -37,10 +37,6 @@ Condition::Condition(std::string const & fieldName, char op, Value const & value
 	, m_comparator(CreateComparator(op, value))
 {}
 
-bool Condition::IsEmpty() const {
-	return m_column.empty();
-}
-
 bool Condition::Satisfies(Record const & record) const {
 	return m_comparator(record[m_column]);
 }

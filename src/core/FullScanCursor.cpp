@@ -3,7 +3,7 @@
 #include "FullScanCursor.h"
 
 FullScanCursor::FullScanCursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors,
-		std::vector<Condition> const & conditions)
+		Conditions const & conditions)
 	: m_descriptors(descriptors)
 	, m_pageManager(pageManager)
 	, m_currentPage(std::make_unique<DataPage>(pageManager, startPageID, descriptors))

@@ -43,21 +43,21 @@ private:
 
 class WithConditions {
 public:
-	WithConditions(std::vector<Condition> const & clauses)
-		: m_clauses(clauses)
+	WithConditions(Conditions const & conditions)
+		: m_conditions(conditions)
 	{}
 	virtual ~WithConditions() = default;
 
 	bool HasConditions() const {
-		return !m_clauses.empty();
+		return !m_conditions.empty();
 	}
 
-	std::vector<Condition> const & GetConditions() const {
-		return m_clauses;
+	Conditions const & GetConditions() const {
+		return m_conditions;
 	}
 
 private:
-	std::vector<Condition> m_clauses;
+	Conditions m_conditions;
 };
 
 class CreateTableStatement : public ISQLStatement {
@@ -106,7 +106,7 @@ private:
 class SelectStatement : public ISQLStatement, public WithConditions {
 public:
 	SelectStatement(std::string const & tableName, std::vector<std::string> const & fields,
-			std::vector<Condition> const & clause = std::vector<Condition>())
+			Conditions const & clause = Conditions())
 		: ISQLStatement(SQLStatementType::SELECT, tableName)
 		, WithConditions(clause)
 		, m_fields(fields)
@@ -148,7 +148,7 @@ private:
 class UpdateStatement : public ISQLStatement, public WithConditions {
 public:
 	UpdateStatement(std::string const & tableName, std::map<std::string, Value> const & colVals,
-			std::vector<Condition> const & conditions)
+			Conditions const & conditions)
 		: ISQLStatement(SQLStatementType::UPDATE, tableName)
 		, WithConditions(conditions)
 		, m_colVals(colVals)
@@ -164,7 +164,7 @@ private:
 
 class DeleteStatement : public ISQLStatement, public WithConditions {
 public:
-	DeleteStatement(std::string const & tableName, std::vector<Condition> const & clause)
+	DeleteStatement(std::string const & tableName, Conditions const & clause)
 		: ISQLStatement(SQLStatementType::DELETE, tableName)
 		, WithConditions(clause)
 	{}

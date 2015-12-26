@@ -14,7 +14,7 @@ struct PageManager;
 class FullScanCursor : public ICursor {
 public:
 	FullScanCursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors,
-		std::vector<Condition> const & conditions = std::vector<Condition>());
+		Conditions const & conditions = Conditions());
 
 	virtual Record const & Get() const override;
 	/// Returns true if there is next record and moves to it.
@@ -32,7 +32,7 @@ protected:
 	std::unique_ptr<DataPage> m_currentPage;
 	size_t m_currentRecordNumber; /// in page
 	Record m_currentRecord;
-	std::vector<Condition> m_conditions;
+	Conditions m_conditions;
 };
 
 #endif // FullScanCursor_h
