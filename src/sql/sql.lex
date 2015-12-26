@@ -35,7 +35,7 @@ int yylex(void);
 "on"              return ON;
 "using"           return USING;
 "btree"           return BTREE;
-"="               { yylval.string_v = strdup(yytext); return OP; }
+"="               { return EQ; }
 "<"               { yylval.string_v = strdup(yytext); return OP; }
 ">"               { yylval.string_v = strdup(yytext); return OP; }
 "("               return *yytext;

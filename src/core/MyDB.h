@@ -25,6 +25,7 @@ private:
 	bool ExecuteCreateTableStatement(CreateTableStatement const & statement);
 	bool ExecuteCreateIndexStatement(CreateIndexStatement const & statement);
 	bool ExecuteInsertStatement(InsertStatement const & statement);
+	size_t ExecuteUpdateStatement(UpdateStatement const & statement);
 	size_t ExecuteDeleteStatement(DeleteStatement const & statement);
 	Table & FindTable(std::string const & name) const;
 	void LoadTables();

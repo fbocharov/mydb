@@ -43,11 +43,14 @@ bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
 size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
 	assert(statement);
 
-	// TODO: add update statement here.
 	switch (statement->GetType()) {
 		case SQLStatementType::INSERT: {
 			auto const & insert = static_cast<InsertStatement &>(*statement);
 			return ExecuteInsertStatement(insert) ? 1 : 0;
+		}
+		case SQLStatementType::UPDATE: {
+			auto const & update = static_cast<UpdateStatement &>(*statement);
+			return ExecuteUpdateStatement(update);
 		}
 		case SQLStatementType::DELETE: {
 			auto const & del = static_cast<DeleteStatement &>(*statement);
@@ -153,8 +156,19 @@ bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
 	return table.Insert(statement.GetColumns(), statement.GetValues());
 }
 
+size_t MyDB::ExecuteUpdateStatement(UpdateStatement const & statement) {
+	auto & table = FindTable(statement.GetTableName());
+	auto cursor = table.GetCursor(statement.GetConditions());
+	size_t updated = 0;
+	while (cursor->Next()) {
+		cursor->Update(statement.GetColVals());
+		++updated;
+	}
+	return updated;
+}
+
+
 size_t MyDB::ExecuteDeleteStatement(DeleteStatement const & statement) {
-//	assert(false && "Delete not implemented.");
 	auto & table = FindTable(statement.GetTableName());
 	auto cursor = table.GetCursor(statement.GetConditions());
 	size_t deleted = 0;

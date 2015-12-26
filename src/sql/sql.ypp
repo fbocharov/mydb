@@ -43,6 +43,7 @@ extern ISQLStatement * parsedStatement;
 %token DOUBLE
 %token VARCHAR
 %token EXIT
+%token EQ
 %token <string_v> OP
 %token <string_v> INT_NUM
 %token <string_v> DOUBLE_NUM
@@ -55,12 +56,14 @@ extern ISQLStatement * parsedStatement;
     std::vector<std::string> * s_vector;
     Values * values_vector;
     std::vector<Condition> * cond_vector;
+    std::map<std::string, Value> * update_values;
     ColumnDescriptors * nt_vector;
     std::nullptr_t nulltype;
     SelectStatement * select_statement;
     CreateTableStatement * create_table_statement;
     CreateIndexStatement * create_index_statement;
     InsertStatement * insert_statement;
+    UpdateStatement * update_statement;
     DeleteStatement * delete_statement;
     ISQLStatement   * statement;
 }
@@ -70,10 +73,12 @@ extern ISQLStatement * parsedStatement;
 %type <s_vector> COL_VECTOR
 %type <s_vector> S_FIELDS
 %type <values_vector> I_FIELDS
+%type <update_values> U_FLD_VALS
 %type <select_statement> SELECT_S
 %type <create_table_statement> CREATE_T_S
 %type <create_index_statement> CREATE_I_S
 %type <insert_statement> INSERT_S
+%type <update_statement> UPDATE_S
 %type <delete_statement> DELETE_S
 %type <nulltype> EXIT_S
 %type <statement> STATEMENT
@@ -87,6 +92,7 @@ extern ISQLStatement * parsedStatement;
 %destructor { delete $$; } <create_table_statement>
 %destructor { delete $$; } <create_index_statement>
 %destructor { delete $$; } <insert_statement>
+%destructor { delete $$; } <update_statement>
 %destructor { delete $$; } <delete_statement>
 
 
@@ -105,12 +111,24 @@ NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR  { $$ = new std::vector<ColumnDescr
                                                    free($1); }
             | IDENTIFIER VARCHAR '(' INT_NUM ')' { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::VARCHAR, atoi($4))); free($1); }
             ;
-COND_VECTOR : IDENTIFIER OP INT_NUM    { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::INT, $3}));
+COND_VECTOR : IDENTIFIER EQ INT_NUM    { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::INT, $3}));
+                                         free($1); free($3); }
+            | IDENTIFIER EQ DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::DOUBLE, $3})); 
+                                         free($1); free($3); }
+            | IDENTIFIER EQ WORD       { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::VARCHAR, $3})); 
+                                         free($1); free($3); }
+            | IDENTIFIER OP INT_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::INT, $3})); 
                                          free($1); free($2); free($3); }
             | IDENTIFIER OP DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::DOUBLE, $3})); 
                                          free($1); free($2); free($3); }
             | IDENTIFIER OP WORD       { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::VARCHAR, $3})); 
                                          free($1); free($2); free($3); }
+            | IDENTIFIER EQ INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::INT, $3})); 
+                                                         $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); }
+            | IDENTIFIER EQ DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::DOUBLE, $3})); 
+                                                         $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); }
+            | IDENTIFIER EQ WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::VARCHAR, $3})); 
+                                                         $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); }
             | IDENTIFIER OP INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::INT, $3})); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($2); free($3); }
             | IDENTIFIER OP DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::DOUBLE, $3})); 
@@ -133,6 +151,19 @@ I_FIELDS    : WORD                    { $$ = new Values(1, Value{ValueType::VARC
             | DOUBLE_NUM ',' I_FIELDS { $$ = new Values(1, Value{ValueType::DOUBLE, $1});
                                         $$->insert($$->end(), $3->begin(), $3->end()); free($1); }
             ;
+U_FLD_VALS  : IDENTIFIER EQ INT_NUM    { $$ = new std::map<std::string, Value>(); 
+                                         (*$$)[$1] = Value{ValueType::INT, $3}; free($1); free($3); }
+            | IDENTIFIER EQ DOUBLE_NUM { $$ = new std::map<std::string, Value>(); 
+                                         (*$$)[$1] = Value{ValueType::DOUBLE, $3}; free($1); free($3); }
+            | IDENTIFIER EQ WORD       { $$ = new std::map<std::string, Value>(); 
+                                         (*$$)[$1] = Value{ValueType::VARCHAR, $3}; free($1); free($3);  }
+            | IDENTIFIER EQ INT_NUM ',' U_FLD_VALS { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::INT, $3}; 
+                                                     $$->insert($5->begin(), $5->end()); free($1); free($3); }
+            | IDENTIFIER EQ DOUBLE_NUM ',' U_FLD_VALS { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::DOUBLE, $3};
+                                                        $$->insert($5->begin(), $5->end()); free($1); free($3); }
+            | IDENTIFIER EQ WORD ',' U_FLD_VALS     { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::VARCHAR, $3};
+                                                      $$->insert($5->begin(), $5->end()); free($1); free($3); }
+            ;
 CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateTableStatement($3, *$5); delete $5; free($3); }
             ;
 CREATE_I_S  : CREATE INDEX IDENTIFIER ON IDENTIFIER '(' COL_VECTOR ')' USING BTREE { $$ = new CreateIndexStatement($5, $3, *$7); delete $7; 
@@ -143,6 +174,9 @@ CREATE_I_S  : CREATE INDEX IDENTIFIER ON IDENTIFIER '(' COL_VECTOR ')' USING BTR
 INSERT_S    : INSERT INTO IDENTIFIER VALUES '(' I_FIELDS ')' { $$ = new InsertStatement($3, *$6); delete $6; free($3); }
             | INSERT INTO IDENTIFIER '(' COL_VECTOR ')' VALUES '(' I_FIELDS ')' { $$ = new InsertStatement($3, *$5, *$9); 
                                                                                   delete $5; delete $9; free($3); }
+            ;
+UPDATE_S    : UPDATE TABLE IDENTIFIER SET U_FLD_VALS WHERE COND_VECTOR { $$ = new UpdateStatement($3, *$5, *$7); 
+                                                                         free($3); delete $5; delete $7; }
             ;
 DELETE_S    : DELETE FROM IDENTIFIER WHERE COND_VECTOR { $$ = new DeleteStatement($3, *$5); delete $5; free($3); }
             ;
@@ -155,6 +189,7 @@ STATEMENT   : SELECT_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | INSERT_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | CREATE_T_S ';' { parsedStatement = $1; $$ = parsedStatement; }
             | CREATE_I_S ';' { parsedStatement = $1; $$ = parsedStatement; }
+            | UPDATE_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | DELETE_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | EXIT_S         { parsedStatement = $1; $$ = parsedStatement; }
             ;

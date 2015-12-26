@@ -30,6 +30,7 @@ void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statemen
 			break;
 		}
 		case SQLStatementType::INSERT:
+		case SQLStatementType::UPDATE:
 		case SQLStatementType::DELETE: {
 			size_t rows = db.ExecuteUpdate(statement);
 			std::cout << "OK " << rows << std::endl;

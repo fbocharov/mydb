@@ -2,6 +2,7 @@
 #define SQLStatement_h
 
 #include <vector>
+#include <map>
 #include <string>
 #include <utility>
 
@@ -142,6 +143,23 @@ public:
 private:
 	std::vector<std::string> const m_columns;
 	Values const m_values;
+};
+
+class UpdateStatement : public ISQLStatement, public WithConditions {
+public:
+	UpdateStatement(std::string const & tableName, std::map<std::string, Value> const & colVals,
+			std::vector<Condition> const & conditions)
+		: ISQLStatement(SQLStatementType::UPDATE, tableName)
+		, WithConditions(conditions)
+		, m_colVals(colVals)
+	{}
+
+	std::map<std::string, Value> const & GetColVals() const {
+		return m_colVals;
+	}
+
+private:
+	std::map<std::string, Value> m_colVals;
 };
 
 class DeleteStatement : public ISQLStatement, public WithConditions {
