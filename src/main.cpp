@@ -18,7 +18,7 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 
 	printer.PrintHeading(tableDescription);
 	while (cursor->Next())
-		printer.PrintLine(cursor->Get().GetValues());
+		printer.PrintLine(cursor->GetAll());
 }
 
 void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, CSVPrinter & printer) {
@@ -85,6 +85,43 @@ int main(int argc, char * argv[]) {
 		Log(LogType::Error) << "std::exception: " << e.what() << std::endl;
 		return 1;
 	}
+
+//	try {
+//		MyDB db("InsertTest.mdb");
+//		ColumnDescriptors descriptors;
+//		descriptors.emplace_back(ColumnDescriptor("id", ValueType::INT, 4));
+//		descriptors.emplace_back(ColumnDescriptor("name", ValueType::VARCHAR, 30));
+//		std::unique_ptr<ISQLStatement> create = std::make_unique<CreateTableStatement>("test", descriptors);
+//		db.ExecuteCreate(create);
+
+//		std::vector<std::string> columns;
+//		columns.push_back("id");
+//		columns.push_back("name");
+//		Values values(2);
+//		for (size_t i = 0; i < 1000000; ++i) {
+//			values[0] = Value{ValueType::INT, i};
+//			values[1] = Value{ValueType::VARCHAR, "dummy " + std::to_string(i)};
+//			std::unique_ptr<ISQLStatement> insert = std::make_unique<InsertStatement>("test", columns, values);
+//			db.ExecuteUpdate(insert);
+//			if (0 == i % 100000)
+//				std::cout << "Inserted " << i << std::endl;
+//		}
+//	} catch (std::exception const & e) {
+//		std::cerr << e.what() << std::endl;
+//		return 1;
+//	}
+
+//	HeapFile file("test.hp", true);
+//	auto page = std::make_shared<Page>(file.GetFreePageID());
+//	NumberToBytes(1488, page->GetData());
+//	file.WritePage(page);
+
+//	PageManager manager("test.mdb", true);
+//	for (size_t i = 0; i < 99; ++i) {
+//		auto page = manager.AllocatePage().lock();
+//		NumberToBytes(1488, page->GetData());
+//		page->SetDirty();
+//	}
 
 	return 0;
 }

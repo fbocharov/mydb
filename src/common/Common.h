@@ -5,29 +5,7 @@
 #include <string>
 #include <cstdint>
 
-enum class ValueType : std::uint8_t {
-	UNKNOWN,
-	INT,
-	DOUBLE,
-	VARCHAR
-};
-
-struct Value {
-    Value()
-    {
-        type = ValueType::UNKNOWN;
-        value = "";
-    }
-    Value(ValueType vt, std::string str)
-    {
-        type = vt, value = str;
-    }
-	ValueType type;
-	std::string value;
-};
-
-typedef std::vector<Value> Values;
-
+#include "Value.h"
 
 static size_t constexpr VARCHAR_MAX_LENGTH = 128; // should be less than uint8_t::max
 static size_t constexpr COLUMN_NAME_LENGTH = 64;

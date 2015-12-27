@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include <backend/PageManager.h>
 
 #include "FullScanCursor.h"
@@ -11,8 +13,30 @@ FullScanCursor::FullScanCursor(PageManager & pageManager, PageID startPageID, Co
 	, m_conditions(conditions)
 {}
 
-Record const & FullScanCursor::Get() const {
-	return m_currentRecord;
+Value FullScanCursor::Get(std::string const & column) const {
+	char const * record = m_currentPage->GetRawRecord(m_currentRecordNumber);
+	assert(!*record); // checking for delete bit
+
+	++record; // skip delete bit
+	for (auto const & descriptor: m_descriptors) {
+		if (descriptor.name == column)
+			return Value{descriptor.type, std::string(record, descriptor.size)};
+		record += descriptor.size;
+	}
+
+	throw std::runtime_error("Record doesn't contain field \"" + column + "\".");
+}
+
+Values FullScanCursor::GetAll() const {
+	char const * record = m_currentPage->GetRawRecord(m_currentRecordNumber);
+	Values values;
+	++record; // skip delete bit
+	for (auto const & descriptor: m_descriptors) {
+		values.emplace_back(descriptor.type, std::string(record, descriptor.size));
+		record += descriptor.size;
+	}
+
+	return values;
 }
 
 bool FullScanCursor::Next() {
@@ -26,11 +50,10 @@ bool FullScanCursor::Next() {
 			m_currentRecordNumber = 0;
 		} else {
 			++m_currentRecordNumber;
-			m_currentRecord = m_currentPage->GetRecord(m_currentRecordNumber);
 		}
-	} while ((!SatisfiesAll(m_currentRecord) || m_currentRecord.IsDeleted()) && HasNext());
+	} while (!SatisfiesAll() && HasNext());
 
-	return SatisfiesAll(m_currentRecord) && !m_currentRecord.IsDeleted();
+	return SatisfiesAll();
 }
 
 bool FullScanCursor::Update(std::map<std::string, Value> const & colVals) {
@@ -46,14 +69,18 @@ bool FullScanCursor::HasNext() const {
 		m_currentPage->GetNextPageID() != INVALID_PAGE_ID;
 }
 
-bool FullScanCursor::SatisfiesAll(Record const & record) const {
+bool FullScanCursor::SatisfiesAll() const {
 	// NOTE: here we use fact that all conditions are connected with AND.
 	// If you wanna add OR you should also change logic here.
-	for (auto condition: m_conditions) {
-		bool ok = condition.Satisfies(record);
-		if (!ok)
+	char const * record = m_currentPage->GetRawRecord(m_currentRecordNumber);
+	if (*record)
+		return false;
+	for (auto const & condition: m_conditions) {
+		Value v = Get(condition.GetColumn());
+		if (!condition.Satisfies(v))
 			return false;
 	}
 
 	return true;
 }
+

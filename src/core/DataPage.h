@@ -7,7 +7,7 @@
 
 #include <backend/Page.h>
 #include <common/Common.h>
-#include <common/Record.h>
+#include <common/Value.h>
 
 struct PageManager;
 
@@ -19,7 +19,7 @@ public:
 	bool AppendRecord(std::map<std::string, Value> const & colVals);
 	bool UpdateRecord(size_t number, const std::map<std::string, Value> &colVals);
 	bool DeleteRecord(size_t number);
-	Record GetRecord(size_t number);
+	char const * GetRawRecord(size_t number) const;
 
 	size_t GetRecordCount() const;
 	PageID GetID() const;

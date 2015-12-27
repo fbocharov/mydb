@@ -18,7 +18,7 @@ void CSVPrinter::PrintHeading(ColumnDescriptors const & descriptors) {
 
 void CSVPrinter::PrintLine(Values const & values) {
 	for (size_t i = 0; i < values.size(); ++i) {
-		m_stream << values[i].value;
+		m_stream << values[i].ToString();
 		if (i + 1 != values.size())
 			m_stream << ",";
 	}

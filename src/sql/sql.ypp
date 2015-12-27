@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstddef>
 #include <cstring>
+#include <cstdlib>
 
 #include "../common/Common.h"
 #include "../common/Condition.h"
@@ -99,41 +100,41 @@ extern ISQLStatement * parsedStatement;
 %start STATEMENT
 
 %%
-NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR  { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::INT, 9));
+NT_VECTOR   : IDENTIFIER INT  ','  NT_VECTOR  { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::INT, 4));
                                                 $$->insert($$->end(), $4->begin(), $4->end()); free($1); }
-            | IDENTIFIER DOUBLE ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::DOUBLE, 10));
+            | IDENTIFIER DOUBLE ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::DOUBLE, 8));
                                                 $$->insert($$->end(), $4->begin(), $4->end()); free($1); }
             | IDENTIFIER VARCHAR '(' INT_NUM ')' ',' NT_VECTOR { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::VARCHAR, atoi($4)));
                                                                  $$->insert($$->end(), $7->begin(), $7->end()); free($1); }
-            | IDENTIFIER INT                     { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::INT, 9));
+            | IDENTIFIER INT                     { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::INT, 4));
                                                    free($1); }
-            | IDENTIFIER DOUBLE                  { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::DOUBLE, 10)); 
+            | IDENTIFIER DOUBLE                  { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::DOUBLE, 8)); 
                                                    free($1); }
             | IDENTIFIER VARCHAR '(' INT_NUM ')' { $$ = new std::vector<ColumnDescriptor>(1, ColumnDescriptor($1, ValueType::VARCHAR, atoi($4))); free($1); }
             ;
-COND_VECTOR : IDENTIFIER EQ INT_NUM    { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::INT, $3}));
+COND_VECTOR : IDENTIFIER EQ INT_NUM    { $$ = new std::vector<Condition>(1, Condition($1, '=', atoi($3)));
                                          free($1); free($3); }
-            | IDENTIFIER EQ DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::DOUBLE, $3})); 
+            | IDENTIFIER EQ DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, '=', atof($3))); 
                                          free($1); free($3); }
-            | IDENTIFIER EQ WORD       { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::VARCHAR, $3})); 
+            | IDENTIFIER EQ WORD       { $$ = new std::vector<Condition>(1, Condition($1, '=', std::string($3))); 
                                          free($1); free($3); }
-            | IDENTIFIER OP INT_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::INT, $3})); 
+            | IDENTIFIER OP INT_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, atoi($3))); 
                                          free($1); free($2); free($3); }
-            | IDENTIFIER OP DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::DOUBLE, $3})); 
+            | IDENTIFIER OP DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, atof($3))); 
                                          free($1); free($2); free($3); }
-            | IDENTIFIER OP WORD       { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::VARCHAR, $3})); 
+            | IDENTIFIER OP WORD       { $$ = new std::vector<Condition>(1, Condition($1, *$2, std::string($3))); 
                                          free($1); free($2); free($3); }
-            | IDENTIFIER EQ INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::INT, $3})); 
+            | IDENTIFIER EQ INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, '=', atoi($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); }
-            | IDENTIFIER EQ DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::DOUBLE, $3})); 
+            | IDENTIFIER EQ DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, '=', atof($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); }
-            | IDENTIFIER EQ WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, '=', Value{ValueType::VARCHAR, $3})); 
+            | IDENTIFIER EQ WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, '=', std::string($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); }
-            | IDENTIFIER OP INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::INT, $3})); 
+            | IDENTIFIER OP INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, *$2, atoi($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($2); free($3); }
-            | IDENTIFIER OP DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::DOUBLE, $3})); 
+            | IDENTIFIER OP DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, *$2, atof($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($2); free($3); }
-            | IDENTIFIER OP WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, *$2, Value{ValueType::VARCHAR, $3})); 
+            | IDENTIFIER OP WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, *$2, std::string($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($2); free($3); }
             ;
 COL_VECTOR  : IDENTIFIER ',' COL_VECTOR { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); free($1); }
@@ -141,28 +142,28 @@ COL_VECTOR  : IDENTIFIER ',' COL_VECTOR { $$ = new std::vector<std::string>(1, $
             ;
 S_FIELDS    : '*' { $$ = new std::vector<std::string>(); }
             ;
-I_FIELDS    : WORD                    { $$ = new Values(1, Value{ValueType::VARCHAR, $1}); free($1); }
-            | INT_NUM                 { $$ = new Values(1, Value{ValueType::INT, $1});     free($1); }
-            | DOUBLE_NUM              { $$ = new Values(1, Value{ValueType::DOUBLE, $1});  free($1); }
-            | WORD ',' I_FIELDS       { $$ = new Values(1, Value{ValueType::VARCHAR, $1}); 
+I_FIELDS    : WORD                    { $$ = new Values(1, Value{ValueType::VARCHAR, std::string($1)}); free($1); }
+            | INT_NUM                 { $$ = new Values(1, Value{ValueType::INT, atoi($1)});     free($1); }
+            | DOUBLE_NUM              { $$ = new Values(1, Value{ValueType::DOUBLE, atof($1)});  free($1); }
+            | WORD ',' I_FIELDS       { $$ = new Values(1, Value{ValueType::VARCHAR, std::string($1)}); 
                                         $$->insert($$->end(), $3->begin(), $3->end()); free($1); }
-            | INT_NUM ',' I_FIELDS    { $$ = new Values(1, Value{ValueType::INT, $1}); 
+            | INT_NUM ',' I_FIELDS    { $$ = new Values(1, Value{ValueType::INT, atoi($1)}); 
                                         $$->insert($$->end(), $3->begin(), $3->end()); free($1); }
-            | DOUBLE_NUM ',' I_FIELDS { $$ = new Values(1, Value{ValueType::DOUBLE, $1});
+            | DOUBLE_NUM ',' I_FIELDS { $$ = new Values(1, Value{ValueType::DOUBLE, atof($1)});
                                         $$->insert($$->end(), $3->begin(), $3->end()); free($1); }
             ;
 U_FLD_VALS  : IDENTIFIER EQ INT_NUM    { $$ = new std::map<std::string, Value>(); 
-                                         (*$$)[$1] = Value{ValueType::INT, $3}; free($1); free($3); }
+                                         (*$$)[$1] = Value{ValueType::INT, atoi($3)}; free($1); free($3); }
             | IDENTIFIER EQ DOUBLE_NUM { $$ = new std::map<std::string, Value>(); 
-                                         (*$$)[$1] = Value{ValueType::DOUBLE, $3}; free($1); free($3); }
+                                         (*$$)[$1] = Value{ValueType::DOUBLE, atof($3)}; free($1); free($3); }
             | IDENTIFIER EQ WORD       { $$ = new std::map<std::string, Value>(); 
-                                         (*$$)[$1] = Value{ValueType::VARCHAR, $3}; free($1); free($3);  }
-            | IDENTIFIER EQ INT_NUM ',' U_FLD_VALS { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::INT, $3}; 
+                                         (*$$)[$1] = Value{ValueType::VARCHAR, std::string($3)}; free($1); free($3);  }
+            | IDENTIFIER EQ INT_NUM ',' U_FLD_VALS { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::INT, atoi($3)}; 
                                                      $$->insert($5->begin(), $5->end()); free($1); free($3); }
-            | IDENTIFIER EQ DOUBLE_NUM ',' U_FLD_VALS { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::DOUBLE, $3};
+            | IDENTIFIER EQ DOUBLE_NUM ',' U_FLD_VALS { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::DOUBLE, atof($3)};
                                                         $$->insert($5->begin(), $5->end()); free($1); free($3); }
-            | IDENTIFIER EQ WORD ',' U_FLD_VALS     { $$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::VARCHAR, $3};
-                                                      $$->insert($5->begin(), $5->end()); free($1); free($3); }
+            | IDENTIFIER EQ WORD ',' U_FLD_VALS {$$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::VARCHAR,std::string($3)};
+                                                 $$->insert($5->begin(), $5->end()); free($1); free($3); }
             ;
 CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateTableStatement($3, *$5); delete $5; free($3); }
             ;

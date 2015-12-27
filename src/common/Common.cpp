@@ -1,9 +1,9 @@
 #include <cstring>
+#include <string>
 
 #include <utils/Utils.h>
 
 #include "Common.h"
-#include "Record.h"
 
 ColumnDescriptor::ColumnDescriptor()
 	: name{}

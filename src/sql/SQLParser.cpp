@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS // for vs
-#include <iostream>
+
 #include <algorithm>
 
 #include <utils/Log.h>

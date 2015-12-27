@@ -62,16 +62,16 @@ bool DataPage::UpdateRecord(size_t number, std::map<std::string, Value> const & 
 		return false;
 
 	for (auto const & colVal: colVals) {
-		auto const & desc = FindDescriptor(colVal.first);
-		if (!colVal.second.value.empty() && desc.type != colVal.second.type) {
-			std::string field(desc.name);
-			throw std::runtime_error("Invalid value for field '" + field + "'.");
+		auto const & descriptor = FindDescriptor(colVal.first);
+		if (!colVal.second.IsEmpty() && descriptor.type != colVal.second.GetType()) {
+			std::string field(descriptor.name);
+			throw std::runtime_error("Invalid value for field \"" + field + "\".");
 		}
 	}
 	// Values should be inserted after check that all of them are valid.
 	for (auto const & colVal: colVals) {
 		size_t const colOffset = m_columnOffsets[colVal.first];
-		::memcpy(data + colOffset, colVal.second.value.c_str(), colVal.second.value.length() + 1);
+		memcpy(data + colOffset, colVal.second.GetBytes(), colVal.second.GetSize());
 	}
 
 	return true;
@@ -85,11 +85,11 @@ bool DataPage::DeleteRecord(size_t number) {
 	return true;
 }
 
-Record DataPage::GetRecord(size_t number) {
+char const * DataPage::GetRawRecord(size_t number) const {
 	size_t const offset = CalculateRecordOffset(number);
 	auto page = GetNativePage();
 
-	return Record(page->GetData() + offset, m_columnDescriptors);
+	return page->GetData() + offset;
 }
 
 size_t DataPage::GetRecordCount() const {
