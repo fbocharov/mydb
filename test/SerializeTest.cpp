@@ -9,7 +9,7 @@ TEST(SerializeTest, ColumnDescriptorSerializeTest) {
 	char buf[ColumnDescriptor::DESCRIPTOR_SIZE];
 
 	ColumnDescriptor before;
-	before.size = strlen(name);
+	before.size = static_cast<uint8_t>(strlen(name));
 	memcpy(before.name, name, before.size);
 	before.type = ValueType::VARCHAR;
 	before.Serialize(buf);
@@ -20,7 +20,7 @@ TEST(SerializeTest, ColumnDescriptorSerializeTest) {
 	ASSERT_EQ(before.size, after.size);
 
 	memset(buf, 0, ColumnDescriptor::DESCRIPTOR_SIZE);
-	before.size = strlen(name);
+	before.size = static_cast<uint8_t>(strlen(name));
 	memcpy(before.name, name, before.size);
 	before.type = ValueType::VARCHAR;
 	before.Serialize(buf);

@@ -24,7 +24,7 @@ public:
 	static Table Deserialize(Page const & page, std::shared_ptr<PageManager> manager);
 
 	ColumnDescriptors const & GetDescription() const;
-	bool HasIndex(std::string const & name);
+	bool HasIndex(std::string const & name) const;
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
 
 	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
@@ -37,7 +37,6 @@ private:
 	std::shared_ptr<PageManager> m_pageManager;
 	ColumnDescriptors m_columnDescriptors;
 	Indices m_indices;
-	std::shared_ptr<PageManager> m_pageManager;
 	PageID m_firstPageID;
 	std::unique_ptr<DataPage> m_pageWithSpace;
 };

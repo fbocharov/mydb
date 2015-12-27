@@ -10,7 +10,8 @@ using std::uint32_t;
 // ToDo: replace all magic 4 number to sizeof(something)
 
 Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors)
-	: m_columnDescriptors(descriptors)
+	: m_pageManager(manager)
+	, m_columnDescriptors(descriptors)
 	, m_indices()
 {
 	auto firstPage = m_pageManager->AllocatePage().lock();
@@ -21,10 +22,10 @@ Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & des
 	firstPage->SetDirty();
 }
 
-Table::Table(std::shared_ptr<PageManager> Manager, ColumnDescriptors const & columnDescriptors, Indices const & indices, PageID firstPage)
-	: m_columnDescriptors(columnDescriptors)
+Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, Indices const & indices, PageID firstPage)
+	: m_pageManager(manager)
+	, m_columnDescriptors(columnDescriptors)
 	, m_indices(indices)
-	, m_pageManager(pageManager)
 	, m_firstPageID(firstPage)
 {
 	PageID lastPageID = m_pageManager->GetPage(firstPage).lock()->GetPrevPageID();
@@ -102,7 +103,7 @@ ColumnDescriptors const & Table::GetDescription() const {
 	return m_columnDescriptors;
 }
 
-bool Table::HasIndex(std::string const & name) {
+bool Table::HasIndex(std::string const & name) const {
 	return m_indices.find(name) != m_indices.end();
 }
 
@@ -140,7 +141,7 @@ std::unique_ptr<ICursor> Table::GetCursor(Conditions const & conditions) {
 
 std::unique_ptr<FullScanCursor> Table::GetFullScanCursor()
 {
-	return std::make_unique<FullScanCursor>(m_pageManager, m_firstPageID, m_columnDescriptors);
+	return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
 }
 
 void Table::AddPage() {

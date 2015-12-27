@@ -155,9 +155,9 @@ bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement) {
 	if (table == m_tables.end())
 		throw std::runtime_error("Table with name \"" + tableName + "\" not exists.");
 
-	auto const & tablePtr = (*table).second;
+	auto & tablePtr = (*table).second;
 	auto const & indexName = statement.GetName();
-	if (tablePtr->HasIndex(indexName))
+	if (tablePtr.HasIndex(indexName))
 		throw std::runtime_error("Index \"" + indexName + "\" for table \"" + tableName + "\" already exists.");
 
 	if (statement.GetColumns().size() > 1)
@@ -166,13 +166,13 @@ bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement) {
 	auto const & columnName = statement.GetColumns().front();
 	ColumnDescriptor column;
 	try {
-		column = GetDescriptorByName(tablePtr->GetDescription(), columnName);
+		column = GetDescriptorByName(tablePtr.GetDescription(), columnName);
 	}
 	catch(std::runtime_error const&) {
 		throw std::runtime_error("Column \"" + columnName + "\" in table \"" + tableName + "\" not found.");
 	}
 
-	return tablePtr->AddBTreeIndex(indexName, column);
+	return tablePtr.AddBTreeIndex(indexName, column);
 }
 
 bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
