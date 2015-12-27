@@ -59,6 +59,7 @@ void Table::Serialize(Page & page) {
 	}
 
 	NumberToBytes(m_firstPageID, data);
+	data += sizeof(m_firstPageID);
 }
 
 ColumnDescriptors const & Table::GetDescription() const {

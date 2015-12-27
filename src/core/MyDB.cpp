@@ -92,6 +92,7 @@ void MyDB::LoadTables() {
 
 		PageID tablePageID;
 		BytesToNumber(data, tablePageID);
+		data += sizeof(PageID);
 		auto tablePage = m_pageManager->GetPage(tablePageID).lock();
 		m_tables[tableName] = Table::Deserialize(*tablePage, *m_pageManager);
 		m_pageManager->DeallocatePage(tablePage->GetID());
@@ -117,6 +118,7 @@ void MyDB::SaveTables() {
 
 		auto tablePage = m_pageManager->AllocatePage().lock();
 		NumberToBytes(tablePage->GetID(), data);
+		data += sizeof(PageID);
 		auto & table = nameTable.second;
 		table->Serialize(*tablePage);
 		tablePage->SetDirty();
