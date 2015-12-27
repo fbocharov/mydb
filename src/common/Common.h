@@ -15,7 +15,7 @@ struct ColumnDescriptor {
 	ColumnDescriptor(char const * nm, ValueType tp, std::uint8_t sz);
 
 	static ColumnDescriptor Deserialize(char const * data);
-	void Serialize(char * data);
+	void Serialize(char * data) const;
 
 	char name[COLUMN_NAME_LENGTH];
 	ValueType type;

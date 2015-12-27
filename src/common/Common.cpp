@@ -33,7 +33,7 @@ ColumnDescriptor ColumnDescriptor::Deserialize(char const * data) {
 	return descriptor;
 }
 
-void ColumnDescriptor::Serialize(char * data) {
+void ColumnDescriptor::Serialize(char * data) const {
 	memcpy(data, name, COLUMN_NAME_LENGTH);
 	data += COLUMN_NAME_LENGTH;
 	NumberToBytes(type, data);
