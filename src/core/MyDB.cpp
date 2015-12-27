@@ -149,8 +149,30 @@ bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const & statement) {
 }
 
 bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement) {
-	assert(false && "Create index not implemented.");
-	return false;
+	auto const & tableName = statement.GetTableName();
+
+	auto table = m_tables.find(tableName);
+	if (table == m_tables.end())
+		throw std::runtime_error("Table with name \"" + tableName + "\" not exists.");
+
+	auto const & tablePtr = (*table).second;
+	auto const & indexName = statement.GetName();
+	if (tablePtr->HasIndex(indexName))
+		throw std::runtime_error("Index \"" + indexName + "\" for table \"" + tableName + "\" already exists.");
+
+	if (statement.GetColumns().size() > 1)
+		throw std::runtime_error("Multicolumn indices not suported.");
+
+	auto const & columnName = statement.GetColumns().front();
+	ColumnDescriptor column;
+	try {
+		column = GetDescriptorByName(tablePtr->GetDescription(), columnName);
+	}
+	catch(std::runtime_error const&) {
+		throw std::runtime_error("Column \"" + columnName + "\" in table \"" + tableName + "\" not found.");
+	}
+
+	return tablePtr->AddBTreeIndex(indexName, column);
 }
 
 bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
