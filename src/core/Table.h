@@ -26,6 +26,7 @@ public:
 	ColumnDescriptors const & GetDescription() const;
 	bool HasIndex(std::string const & name);
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
+
 	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
 	std::unique_ptr<FullScanCursor> GetFullScanCursor();
 
@@ -36,6 +37,7 @@ private:
 	std::shared_ptr<PageManager> m_pageManager;
 	ColumnDescriptors m_columnDescriptors;
 	Indices m_indices;
+	std::shared_ptr<PageManager> m_pageManager;
 	PageID m_firstPageID;
 	std::unique_ptr<DataPage> m_pageWithSpace;
 };

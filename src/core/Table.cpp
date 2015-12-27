@@ -8,9 +8,9 @@
 using std::uint32_t;
 
 // ToDo: replace all magic 4 number to sizeof(something)
+
 Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors)
-	: m_pageManager(manager)
-	, m_columnDescriptors(descriptors)
+	: m_columnDescriptors(descriptors)
 	, m_indices()
 {
 	auto firstPage = m_pageManager->AllocatePage().lock();
@@ -21,7 +21,7 @@ Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & des
 	firstPage->SetDirty();
 }
 
-Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, PageID firstPage)
+Table::Table(std::shared_ptr<PageManager> Manager, ColumnDescriptors const & columnDescriptors, Indices const & indices, PageID firstPage)
 	: m_columnDescriptors(columnDescriptors)
 	, m_indices(indices)
 	, m_pageManager(pageManager)
@@ -32,14 +32,16 @@ Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & col
 }
 
 bool Table::AddBTreeIndex(std::string const & name, ColumnDescriptor const & column) {
-	auto index = std::make_unique<Index>(m_pageManager, name, column);
+	Index index(m_pageManager, name, column);
 	auto cursor = GetFullScanCursor();
 
 	while(cursor->Next())
 	{
-		auto const & record = cursor->Get(column.name);
+		auto const & value = cursor->Get(column.name);
+		index.Insert(value, cursor->m_currentPage->GetID(), cursor->m_currentRecordNumber);
 	}
-	m_indices[name] = std::move(index);
+
+	m_indices.emplace(name, index);
 
 	return true;
 }
@@ -62,7 +64,7 @@ Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager
 	Indices indices;
 	for (size_t i = 0; i < indicesCount; ++i) {
 		auto index = Index::Deserialize(data, descriptors, manager);
-		indices[index->GetName()] = std::move(index);
+		indices.emplace(index.GetName(), index);
 		data += INDEX_SIZE;
 	}
 
@@ -88,7 +90,7 @@ void Table::Serialize(Page & page) const {
 	data += 4;
 	for (auto const & ix_kv : m_indices)
 	{
-		ix_kv.second->Serialize(data);
+		ix_kv.second.Serialize(data);
 		data += INDEX_SIZE;
 	}
 

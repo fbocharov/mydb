@@ -1,21 +1,21 @@
 #include "Index.h"
 #include "IndexCursor.h"
 
-Index::Index(PageManager & pageManager, std::string const & name, ColumnDescriptor const & column, PageID firstPageID)
+Index::Index(std::shared_ptr<PageManager> pageManager, std::string const & name, ColumnDescriptor const & column, PageID firstPageID)
 	: m_pageManager(pageManager)
 	, m_name(name)
 	, m_column(column)
 	, m_firstPageID(firstPageID)
 {}
 
-Index::Index(PageManager & pageManager, std::string const& name, ColumnDescriptor const& column)
+Index::Index(std::shared_ptr<PageManager> pageManager, std::string const& name, ColumnDescriptor const& column)
 	: m_pageManager(pageManager)
 	, m_name(name)
 	, m_column(column)
 	, m_firstPageID(0)
 {}
 
-std::unique_ptr<Index> Index::Deserialize(char const * data, ColumnDescriptors const & columns, PageManager & manager)
+Index Index::Deserialize(char const * data, ColumnDescriptors const & columns, std::shared_ptr<PageManager> manager)
 {
 	char name[INDEX_NAME_SIZE + 1] = {0};
 	memcpy(name, data, INDEX_NAME_SIZE);
@@ -30,7 +30,7 @@ std::unique_ptr<Index> Index::Deserialize(char const * data, ColumnDescriptors c
 
 	auto const & col = GetDescriptorByName(columns, name);
 
-	return std::make_unique<Index>(manager, name, col, firstPageID);
+	return Index(manager, name, col, firstPageID);
 }
 
 void Index::Serialize(char* data) const
@@ -43,6 +43,11 @@ void Index::Serialize(char* data) const
 }
 
 bool Index::Insert(Value const& value, PageID pageID, size_t recordNum)
+{
+	return true;
+}
+
+bool Index::Delete(Value const& value, PageID pageID, size_t recordNum)
 {
 	return true;
 }
