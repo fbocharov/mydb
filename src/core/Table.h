@@ -9,20 +9,25 @@
 #include <common/Condition.h>
 
 #include "DataPage.h"
+#include "Index.h"
 
-class ICursor;
+struct ICursor;
+class FullScanCursor;
 
 class Table {
 public:
 	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors);
-	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, PageID firstPage);
+	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, Indices const & indices, PageID firstPage);
 
+	bool AddBTreeIndex(std::string const & name, ColumnDescriptor const & column);
 	void Serialize(Page & page) const;
 	static Table Deserialize(Page const & page, std::shared_ptr<PageManager> manager);
 
 	ColumnDescriptors const & GetDescription() const;
+	bool HasIndex(std::string const & name);
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
 	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
+	std::unique_ptr<FullScanCursor> GetFullScanCursor();
 
 private:
 	void AddPage();
@@ -30,6 +35,7 @@ private:
 private:
 	std::shared_ptr<PageManager> m_pageManager;
 	ColumnDescriptors m_columnDescriptors;
+	Indices m_indices;
 	PageID m_firstPageID;
 	std::unique_ptr<DataPage> m_pageWithSpace;
 };

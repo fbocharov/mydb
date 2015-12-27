@@ -6,30 +6,36 @@
 #include <memory>
 #include "Cursor.h"
 #include <common/Condition.h>
+#include <Page.h>
 
 class Page;
 class PageManager;
 
+static size_t constexpr INDEX_NAME_SIZE = 80;
+static size_t constexpr INDEX_SIZE = INDEX_NAME_SIZE + COLUMN_NAME_LENGTH + sizeof(uint32_t);
+
 class Index
 {
 public:
-	Index(std::string const & name, std::string const & columnName);
+	Index(PageManager & pageManager, std::string const & name, ColumnDescriptor const & column, PageID firstPageID);
+	Index(PageManager & pageManager, std::string const & name, ColumnDescriptor const & column);
+	
+	static std::unique_ptr<Index> Deserialize(char const * data, ColumnDescriptors const & columns, PageManager & manager);
+	void Serialize(char * data) const;
 
-	static Index Deserialize(char const * data);
-	void Serialize(char * data);
-
-	// ToDo: resolve parameters
-	bool Insert();
+	bool Insert(Value const& value, PageID pageID, size_t recordNum);
 
 	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
 
-	// ToDo: evaluate index size as summ of sizes max_tablename_length, max_columnname_length, size of padeID
-	static constexpr uint32_t INDEX_SIZE = 0;
+	std::string const & GetName() const;
 
 private:
+	PageManager & m_pageManager;
 	std::string m_name;
-	std::string m_columnName;
+	ColumnDescriptor m_column;
+	PageID m_firstPageID;
 };
 
-typedef std::vector<Index> Indices;
+typedef std::map<std::string, std::unique_ptr<Index>> Indices;
+
 #endif // Index_h

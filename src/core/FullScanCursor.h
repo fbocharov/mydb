@@ -7,10 +7,12 @@
 #include <common/Value.h>
 #include <common/Condition.h>
 
+#include "Table.h"
+
 #include "Cursor.h"
 #include "DataPage.h"
 
-struct PageManager;
+class PageManager;
 
 class FullScanCursor : public ICursor {
 public:
@@ -24,6 +26,8 @@ public:
 	virtual bool Update(std::map<std::string, Value> const & colVals) override;
 	virtual bool Delete() override;
 
+	
+	friend bool Table::AddBTreeIndex(std::string const & name, ColumnDescriptor const & column);
 private:
 	bool HasNext() const;
 	bool SatisfiesAll() const;
