@@ -51,7 +51,9 @@ std::string Value::ToString() const {
 		case ValueType::DOUBLE: {
 			double value;
 			BytesToNumber(m_bytes.data(), value);
-			return std::to_string(value);
+			std::string str = std::to_string(value);
+			str.erase(str.find_last_not_of('0') + 2);
+			return str;
 		}
 		case ValueType::VARCHAR: {
 			return m_bytes;
