@@ -4,6 +4,7 @@
 #include <utils/Utils.h>
 
 #include "Common.h"
+#include <algorithm>
 
 ColumnDescriptor::ColumnDescriptor()
 	: name{}
@@ -39,4 +40,16 @@ void ColumnDescriptor::Serialize(char * data) const {
 	NumberToBytes(type, data);
 	data += 1;
 	NumberToBytes(size, data);
+}
+
+ColumnDescriptor GetDescriptorByName(ColumnDescriptors descriptors, std::string const& name)
+{
+	auto const & searchResult = std::find_if(descriptors.begin(), descriptors.end(),
+		[name](const ColumnDescriptor & descriptor)
+		-> bool { return name == descriptor.name; });
+
+	if(searchResult == descriptors.end())
+		throw std::runtime_error("Descriptor with name \"" + name + "\" not found.");
+	
+	return *searchResult;
 }

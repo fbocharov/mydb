@@ -27,5 +27,6 @@ struct ColumnDescriptor {
 
 typedef std::vector<ColumnDescriptor> ColumnDescriptors;
 
+ColumnDescriptor GetDescriptorByName(ColumnDescriptors descriptors, std::string const & name);
 
 #endif // Common_h
