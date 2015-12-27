@@ -38,6 +38,11 @@ private:
 
 typedef std::vector<Value> Values;
 
+template<>
+inline std::string Value::Get<std::string>() const {
+	return m_bytes;
+}
+
 template<typename T>
 Value::Value(ValueType type, T value)
 	: m_type(type)

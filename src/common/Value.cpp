@@ -20,11 +20,6 @@ Value::Value(ValueType type, std::string const & str)
 	}
 }
 
-template<>
-std::string Value::Get<std::string>() const {
-	return m_bytes;
-}
-
 ValueType Value::GetType() const {
 	return m_type;
 }
