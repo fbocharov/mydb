@@ -44,8 +44,8 @@ namespace parser_tests
         auto createStatement = dynamic_cast<CreateTableStatement*>(statement.get());
         ASSERT_NE(createStatement, nullptr);
         auto columns = createStatement->GetColumns();
-		ASSERT_EQ(columns[0].size, 10);
-		ASSERT_EQ(columns[1].size, 9);
+		ASSERT_EQ(columns[0].size, 8);
+		ASSERT_EQ(columns[1].size, 4);
     }
 
     TEST(CreateTableTests, VarcharLengthTest) {
