@@ -160,10 +160,9 @@ size_t MyDB::ExecuteUpdateStatement(UpdateStatement const & statement) {
 	auto & table = FindTable(statement.GetTableName());
 	auto cursor = table.GetCursor(statement.GetConditions());
 	size_t updated = 0;
-	while (cursor->Next()) {
-		cursor->Update(statement.GetColVals());
-		++updated;
-	}
+	while (cursor->Next())
+		if (cursor->Update(statement.GetColVals()))
+			++updated;
 	return updated;
 }
 
@@ -172,16 +171,15 @@ size_t MyDB::ExecuteDeleteStatement(DeleteStatement const & statement) {
 	auto & table = FindTable(statement.GetTableName());
 	auto cursor = table.GetCursor(statement.GetConditions());
 	size_t deleted = 0;
-	while (cursor->Next()) {
-		cursor->Delete();
-		++deleted;
-	}
+	while (cursor->Next())
+		if (cursor->Delete())
+			++deleted;
 	return deleted;
 }
 
 Table & MyDB::FindTable(std::string const & name) const {
 	auto it = m_tables.find(name);
 	if (m_tables.end() == it)
-		throw std::runtime_error("Table with name " + name + " does not exist.");
+		throw std::runtime_error("Table with name \"" + name + "\" does not exist.");
 	return *it->second;
 }
