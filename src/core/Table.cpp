@@ -7,28 +7,28 @@
 
 using std::uint32_t;
 
-Table::Table(PageManager & manager, ColumnDescriptors const & descriptors)
-	: m_columnDescriptors(descriptors)
-	, m_pageManager(manager)
+Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors)
+	: m_pageManager(manager)
+	, m_columnDescriptors(descriptors)
 {
-	auto firstPage = m_pageManager.AllocatePage().lock();
+	auto firstPage = m_pageManager->AllocatePage().lock();
 	m_firstPageID = firstPage->GetID();
 	firstPage->SetNextPageID(INVALID_PAGE_ID);
 	firstPage->SetPrevPageID(firstPage->GetID());
-	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, m_firstPageID, m_columnDescriptors);
+	m_pageWithSpace = std::make_unique<DataPage>(*m_pageManager, m_firstPageID, m_columnDescriptors);
 	firstPage->SetDirty();
 }
 
-Table::Table(PageManager & pageManager, ColumnDescriptors const & columnDescriptors, PageID firstPage)
-	: m_columnDescriptors(columnDescriptors)
-	, m_pageManager(pageManager)
+Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, PageID firstPage)
+	: m_pageManager(manager)
+	, m_columnDescriptors(columnDescriptors)
 	, m_firstPageID(firstPage)
 {
-	PageID lastPageID = m_pageManager.GetPage(firstPage).lock()->GetPrevPageID();
-	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, lastPageID, m_columnDescriptors);
+	PageID lastPageID = m_pageManager->GetPage(firstPage).lock()->GetPrevPageID();
+	m_pageWithSpace = std::make_unique<DataPage>(*m_pageManager, lastPageID, m_columnDescriptors);
 }
 
-std::unique_ptr<Table> Table::Deserialize(Page const & page, PageManager & manager) {
+Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager) {
 	char const * data = page.GetData();
 
 	uint32_t fieldsCount = 0;
@@ -44,10 +44,10 @@ std::unique_ptr<Table> Table::Deserialize(Page const & page, PageManager & manag
 	PageID firstPageID = 0;
 	BytesToNumber(data, firstPageID);
 
-	return std::make_unique<Table>(manager, descriptors, firstPageID);
+	return Table(manager, descriptors, firstPageID);
 }
 
-void Table::Serialize(Page & page) {
+void Table::Serialize(Page & page) const {
 	char * data = page.GetData();
 
 	uint32_t descriptorCount = m_columnDescriptors.size();
@@ -95,13 +95,13 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 }
 
 std::unique_ptr<ICursor> Table::GetCursor(Conditions const & conditions) {
-	return std::make_unique<FullScanCursor>(m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
+	return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
 }
 
 void Table::AddPage() {
-	auto firstPage = m_pageManager.GetPage(m_firstPageID).lock();
-	auto lastPage = m_pageManager.GetPage(firstPage->GetPrevPageID()).lock();
-	auto newPage = m_pageManager.AllocatePage().lock();
+	auto firstPage = m_pageManager->GetPage(m_firstPageID).lock();
+	auto lastPage = m_pageManager->GetPage(firstPage->GetPrevPageID()).lock();
+	auto newPage = m_pageManager->AllocatePage().lock();
 
 	newPage->SetNextPageID(lastPage->GetNextPageID());
 	newPage->SetPrevPageID(lastPage->GetID());
@@ -109,5 +109,5 @@ void Table::AddPage() {
 	firstPage->SetPrevPageID(newPageID);
 	lastPage->SetNextPageID(newPageID);
 
-	m_pageWithSpace = std::make_unique<DataPage>(m_pageManager, newPageID, m_columnDescriptors);
+	m_pageWithSpace = std::make_unique<DataPage>(*m_pageManager, newPageID, m_columnDescriptors);
 }

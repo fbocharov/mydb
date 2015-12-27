@@ -27,13 +27,13 @@ private:
 	bool ExecuteInsertStatement(InsertStatement const & statement);
 	size_t ExecuteUpdateStatement(UpdateStatement const & statement);
 	size_t ExecuteDeleteStatement(DeleteStatement const & statement);
-	Table & FindTable(std::string const & name) const;
+	Table & FindTable(std::string const & name);
 	void LoadTables();
 	void SaveTables();
 
 private:
-	std::unique_ptr<PageManager> m_pageManager;
-	std::map<std::string, std::unique_ptr<Table>> m_tables;
+	std::shared_ptr<PageManager> m_pageManager;
+	std::map<std::string, Table> m_tables;
 
 	static PageID constexpr SYSTEM_PAGE_ID = 0;
 };

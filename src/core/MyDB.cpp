@@ -20,7 +20,7 @@ MyDB::~MyDB() {
 }
 
 ColumnDescriptors const & MyDB::GetTableDescription(std::string const & tableName) const {
-	return FindTable(tableName).GetDescription();
+	return const_cast<MyDB &>(*this).FindTable(tableName).GetDescription();
 }
 
 bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
@@ -94,7 +94,7 @@ void MyDB::LoadTables() {
 		BytesToNumber(data, tablePageID);
 		data += sizeof(PageID);
 		auto tablePage = m_pageManager->GetPage(tablePageID).lock();
-		m_tables[tableName] = Table::Deserialize(*tablePage, *m_pageManager);
+		m_tables.emplace(tableName, Table::Deserialize(*tablePage, m_pageManager));
 		m_pageManager->DeallocatePage(tablePage->GetID());
 	}
 }
@@ -120,7 +120,7 @@ void MyDB::SaveTables() {
 		NumberToBytes(tablePage->GetID(), data);
 		data += sizeof(PageID);
 		auto & table = nameTable.second;
-		table->Serialize(*tablePage);
+		table.Serialize(*tablePage);
 		tablePage->SetDirty();
 	}
 	systemPage->SetDirty();
@@ -143,7 +143,7 @@ bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const & statement) {
 	if (m_tables.find(tableName) != m_tables.end())
 		throw std::runtime_error("Table with name \"" + tableName + "\" already exist.");
 
-	m_tables[tableName] = std::make_unique<Table>(*m_pageManager, columns);
+	m_tables.emplace(tableName, Table(m_pageManager, columns));
 
 	return true;
 }
@@ -179,9 +179,9 @@ size_t MyDB::ExecuteDeleteStatement(DeleteStatement const & statement) {
 	return deleted;
 }
 
-Table & MyDB::FindTable(std::string const & name) const {
+Table & MyDB::FindTable(std::string const & name) {
 	auto it = m_tables.find(name);
 	if (m_tables.end() == it)
 		throw std::runtime_error("Table with name \"" + name + "\" does not exist.");
-	return *it->second;
+	return it->second;
 }
