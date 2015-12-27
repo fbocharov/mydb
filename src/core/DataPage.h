@@ -7,8 +7,7 @@
 
 #include <backend/Page.h>
 #include <common/Common.h>
-
-#include "Record.h"
+#include <common/Value.h>
 
 struct PageManager;
 
@@ -17,10 +16,10 @@ public:
 	DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const & descrpitors);
 	~DataPage();
 
-	bool AppendRecord(std::map<std::string, std::string> const & colVals);
-	void UpdateRecord(size_t number, const std::map<std::string, std::string> &colVals);
-	void DeleteRecord(size_t number);
-	Record GetRecord(size_t number);
+	bool AppendRecord(std::map<std::string, Value> const & colVals);
+	bool UpdateRecord(size_t number, const std::map<std::string, Value> &colVals);
+	bool DeleteRecord(size_t number);
+	char const * GetRawRecord(size_t number) const;
 
 	size_t GetRecordCount() const;
 	PageID GetID() const;
@@ -29,11 +28,10 @@ public:
 	bool HasFreeSpace() const;
 
 private:
-	size_t CalculateRecordOffset(size_t recordNumber) const;
+	size_t CalculateRecordOffset(size_t number) const;
 	void ReadHeader(char const * data);
 	void WriteHeader(char * data);
 	std::shared_ptr<Page> GetNativePage(bool needDirty = false) const;
-	bool CheckType(ColumnDescriptor const & descriptor, std::string const & value);
 	ColumnDescriptor const & FindDescriptor(std::string const & name);
 
 private:

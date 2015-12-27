@@ -18,31 +18,27 @@ namespace parser_tests
         ASSERT_EQ(select_statement->GetTableName(), "my_table");
     }
 
-    
     /* select statement with where tests. Part 2 */
-    /*
-    TEST(SelectTests, WhereIntConditionTest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=1;");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
+	TEST(SelectTests, WhereIntConditionTest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=1;");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
 
-    TEST(SelectTests, WhereVarcharConditionTest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=\"It is varchar string\";");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
+	TEST(SelectTests, WhereVarcharConditionTest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=\"It is varchar string\";");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
 
-    TEST(SelectTests, WhereDoubleConditionTest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=1.0;");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
+	TEST(SelectTests, WhereDoubleConditionTest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=1.0;");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
 
-    TEST(SelectTests, WhereSpacedConditionTest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1 = 1;");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
-    */
+	TEST(SelectTests, WhereSpacedConditionTest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1 = 1;");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
     /* Where statement with where multicondition tests. Part 3. or advanced part 2 */
-    /*
     TEST(SelectTests, WhereStatementTwoAndConditionsTest) {
         auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=1 and f2=\"string too  \";");
         ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
@@ -57,8 +53,7 @@ namespace parser_tests
         auto statement = SQLParser::Instance().ParseStatement("select * from my_table where f1=1 and f2=\"string too\" and f3=2.5 and f4 = 23.6;");
         ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
     }
-    */
-    /* Not wildcard select query */
+	/* Not wildcard select query */
     /*
     TEST(SelectTests, OneFieldTest) {
         auto statement = SQLParser::Instance().ParseStatement("select f1 from my_table;");
@@ -88,33 +83,33 @@ namespace parser_tests
     /* Where statement and join tests. Part 3 */
     
     /* Compare where statements */
-    /*
-    TEST(SelectTests, LTTest) {
+	/*
+	TEST(SelectTests, LTTest) {
         auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 < 54;");
         ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
     }
 
-    TEST(SelectTests, LETest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 <= 54;");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
+	TEST(SelectTests, LETest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 <= 54;");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
 
     TEST(SelectTests, GTTest) {
         auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 > 54;");
         ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
     }
 
-    TEST(SelectTests, GETest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 >= 54;");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
+	TEST(SelectTests, GETest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 >= 54;");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
 
-    TEST(SelectTests, NEQTest) {
-        auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 != 54;");
-        ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
-    }
-    */
-    /* Join only statments */
+	TEST(SelectTests, NEQTest) {
+		auto statement = SQLParser::Instance().ParseStatement("select * from table1 where table1.col1 != 54;");
+		ASSERT_NE(dynamic_cast<SelectStatement*>(statement.get()), nullptr);
+	}
+	*/
+	/* Join only statments */
     /*
     TEST(SelectTests, SimpleJoinTest) {
         auto statement = SQLParser::Instance().ParseStatement("select * from table1 join table1 on table1.col1=table2.col2;");

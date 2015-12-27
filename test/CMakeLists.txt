@@ -21,6 +21,7 @@ target_link_libraries(${PROJECT_NAME}
 	${GTEST_MAIN_LIBRARY}
 	pthread
 	mydb.lib
+	-lstdc++fs
 )
 
 enable_testing()

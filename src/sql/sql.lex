@@ -23,8 +23,21 @@ int yylex(void);
 "insert"          return INSERT;
 "into"            return INTO;
 "values"          return VALUES;
+"update"          return UPDATE;
+"set"             return SET;
+"delete"          return DELETE;
+"where"           return WHERE;
+"and"             return AND;
 "create"          return CREATE;
 "table"           return TABLE;
+"index"           return INDEX;
+"unique"          return UNIQUE;
+"on"              return ON;
+"using"           return USING;
+"btree"           return BTREE;
+"="               { return EQ; }
+"<"               { yylval.string_v = strdup(yytext); return OP; }
+">"               { yylval.string_v = strdup(yytext); return OP; }
 "("               return *yytext;
 ")"               return *yytext;
 ","               return *yytext;
@@ -37,7 +50,7 @@ int yylex(void);
 "quit"            return EXIT;
 [0-9]+            { yylval.string_v = strdup(yytext); return INT_NUM;    }
 [0-9]+\.[0-9]+    { yylval.string_v = strdup(yytext); return DOUBLE_NUM; }
-\"[ \ta-z0-9]+\"   { yylval.string_v = strdup(yytext); return WORD;       }
+\"[ \ta-z0-9]*\"  { yylval.string_v = strdup(yytext); return WORD;       }
 [a-z]+[a-z0-9_]*  { yylval.string_v = strdup(yytext); return IDENTIFIER; }
 [ \t]             {}
 \r                {}

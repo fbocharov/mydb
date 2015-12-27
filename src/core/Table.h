@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <common/Common.h>
+#include <common/Condition.h>
 
 #include "DataPage.h"
 
@@ -13,22 +14,22 @@ class ICursor;
 
 class Table {
 public:
-	Table(PageManager & manager, ColumnDescriptors const & descriptors);
-	Table(PageManager & pageManager, ColumnDescriptors const & columnDescriptors, PageID firstPage);
+	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors);
+	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, PageID firstPage);
 
-	static std::unique_ptr<Table> Deserialize(Page const & page, PageManager & manager);
-	void Serialize(Page & page);
+	void Serialize(Page & page) const;
+	static Table Deserialize(Page const & page, std::shared_ptr<PageManager> manager);
 
 	ColumnDescriptors const & GetDescription() const;
-	bool Insert(std::vector<std::string> const & columns, std::vector<std::string> const & values);
-	std::unique_ptr<ICursor> GetCursor();
+	bool Insert(std::vector<std::string> const & columns, Values const & values);
+	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
 
 private:
 	void AddPage();
 
 private:
+	std::shared_ptr<PageManager> m_pageManager;
 	ColumnDescriptors m_columnDescriptors;
-	PageManager & m_pageManager;
 	PageID m_firstPageID;
 	std::unique_ptr<DataPage> m_pageWithSpace;
 };

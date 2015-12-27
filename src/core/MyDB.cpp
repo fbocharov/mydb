@@ -20,16 +20,20 @@ MyDB::~MyDB() {
 }
 
 ColumnDescriptors const & MyDB::GetTableDescription(std::string const & tableName) const {
-	return FindTable(tableName).GetDescription();
+	return const_cast<MyDB &>(*this).FindTable(tableName).GetDescription();
 }
 
-
 bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
-	// TODO: add create index statement here.
+	assert(statement);
+
 	switch (statement->GetType()) {
-		case SQLStatementType::CREATE: {
-			auto const & create = static_cast<CreateStatement &>(*statement);
-			return ExecuteCreateStatement(create);
+		case SQLStatementType::CREATE_TABLE: {
+			auto const & create = static_cast<CreateTableStatement &>(*statement);
+			return ExecuteCreateTableStatement(create);
+		}
+		case SQLStatementType::CREATE_INDEX: {
+			auto const & create = static_cast<CreateIndexStatement &>(*statement);
+			return ExecuteCreateIndexStatement(create);
 		}
 		default:
 			throw std::runtime_error("Unknown create statement.");
@@ -37,11 +41,20 @@ bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
 }
 
 size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
-	// TODO: add update and delete statements here.
+	assert(statement);
+
 	switch (statement->GetType()) {
 		case SQLStatementType::INSERT: {
 			auto const & insert = static_cast<InsertStatement &>(*statement);
 			return ExecuteInsertStatement(insert) ? 1 : 0;
+		}
+		case SQLStatementType::UPDATE: {
+			auto const & update = static_cast<UpdateStatement &>(*statement);
+			return ExecuteUpdateStatement(update);
+		}
+		case SQLStatementType::DELETE: {
+			auto const & del = static_cast<DeleteStatement &>(*statement);
+			return ExecuteDeleteStatement(del);
 		}
 		default:
 			throw std::runtime_error("Unknown update statement.");
@@ -49,10 +62,16 @@ size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
 }
 
 std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement) {
+	assert(statement);
+
 	if (SQLStatementType::SELECT != statement->GetType())
 		throw std::runtime_error("Can't execute non select query.");
 
-	auto & table = FindTable(statement->GetTableName());
+	auto const & select = static_cast<SelectStatement const &>(*statement);
+	auto & table = FindTable(select.GetTableName());
+
+	if (select.HasConditions())
+		return table.GetCursor(select.GetConditions());
 	return table.GetCursor();
 }
 
@@ -73,8 +92,9 @@ void MyDB::LoadTables() {
 
 		PageID tablePageID;
 		BytesToNumber(data, tablePageID);
+		data += sizeof(PageID);
 		auto tablePage = m_pageManager->GetPage(tablePageID).lock();
-		m_tables[tableName] = Table::Deserialize(*tablePage, *m_pageManager);
+		m_tables.emplace(tableName, Table::Deserialize(*tablePage, m_pageManager));
 		m_pageManager->DeallocatePage(tablePage->GetID());
 	}
 }
@@ -98,22 +118,39 @@ void MyDB::SaveTables() {
 
 		auto tablePage = m_pageManager->AllocatePage().lock();
 		NumberToBytes(tablePage->GetID(), data);
+		data += sizeof(PageID);
 		auto & table = nameTable.second;
-		table->Serialize(*tablePage);
+		table.Serialize(*tablePage);
 		tablePage->SetDirty();
 	}
 	systemPage->SetDirty();
 }
 
-bool MyDB::ExecuteCreateStatement(CreateStatement const & statement) {
+bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const & statement) {
 	auto const & columns = statement.GetColumns();
-	for (auto const & column: columns)
-		if (strlen(column.name) > COLUMN_NAME_LENGTH)
+	size_t headerSize = 0;
+	for (auto const & column: columns) {
+		size_t nameLen = strlen(column.name);
+		if (nameLen > COLUMN_NAME_LENGTH)
 			throw std::runtime_error("Column name should be less than " +
 				std::to_string(COLUMN_NAME_LENGTH) + "symbols.");
+		headerSize += ColumnDescriptor::DESCRIPTOR_SIZE;
+	}
+	if (headerSize > Page::PAGE_DATA_SIZE)
+		throw std::runtime_error("Too big record length.");
 
-	m_tables[statement.GetTableName()] = std::make_unique<Table>(*m_pageManager, columns);
+	std::string const & tableName = statement.GetTableName();
+	if (m_tables.find(tableName) != m_tables.end())
+		throw std::runtime_error("Table with name \"" + tableName + "\" already exist.");
+
+	m_tables.emplace(tableName, Table(m_pageManager, columns));
+
 	return true;
+}
+
+bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement) {
+	assert(false && "Create index not implemented.");
+	return false;
 }
 
 bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
@@ -121,9 +158,30 @@ bool MyDB::ExecuteInsertStatement(InsertStatement const & statement) {
 	return table.Insert(statement.GetColumns(), statement.GetValues());
 }
 
-Table & MyDB::FindTable(std::string const & name) const {
+size_t MyDB::ExecuteUpdateStatement(UpdateStatement const & statement) {
+	auto & table = FindTable(statement.GetTableName());
+	auto cursor = table.GetCursor(statement.GetConditions());
+	size_t updated = 0;
+	while (cursor->Next())
+		if (cursor->Update(statement.GetColVals()))
+			++updated;
+	return updated;
+}
+
+
+size_t MyDB::ExecuteDeleteStatement(DeleteStatement const & statement) {
+	auto & table = FindTable(statement.GetTableName());
+	auto cursor = table.GetCursor(statement.GetConditions());
+	size_t deleted = 0;
+	while (cursor->Next())
+		if (cursor->Delete())
+			++deleted;
+	return deleted;
+}
+
+Table & MyDB::FindTable(std::string const & name) {
 	auto it = m_tables.find(name);
 	if (m_tables.end() == it)
-		throw std::runtime_error("Table with name " + name + " does not exist.");
-	return *it->second;
+		throw std::runtime_error("Table with name \"" + name + "\" does not exist.");
+	return it->second;
 }

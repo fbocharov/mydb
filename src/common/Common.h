@@ -1,29 +1,24 @@
 #ifndef Common_h
 #define Common_h
 
-#include <cstdint>
-#include <cstddef>
 #include <vector>
-#include <cstring>
+#include <string>
+#include <cstdint>
 
-enum class FieldType : std::uint8_t {
-	INT,
-	DOUBLE,
-	VARCHAR
-};
+#include "Value.h"
 
 static size_t constexpr VARCHAR_MAX_LENGTH = 128; // should be less than uint8_t::max
 static size_t constexpr COLUMN_NAME_LENGTH = 64;
 
 struct ColumnDescriptor {
-	ColumnDescriptor() = default;
-	ColumnDescriptor(char const * nm, FieldType tp, std::uint8_t sz);
+	ColumnDescriptor();
+	ColumnDescriptor(char const * nm, ValueType tp, std::uint8_t sz);
 
 	static ColumnDescriptor Deserialize(char const * data);
-	void Serialize(char * data);
+	void Serialize(char * data) const;
 
 	char name[COLUMN_NAME_LENGTH];
-	FieldType type;
+	ValueType type;
 	std::uint8_t size; /// in bytes
 
 	static uint32_t constexpr DESCRIPTOR_SIZE =
@@ -31,5 +26,6 @@ struct ColumnDescriptor {
 };
 
 typedef std::vector<ColumnDescriptor> ColumnDescriptors;
+
 
 #endif // Common_h

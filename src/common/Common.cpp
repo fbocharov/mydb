@@ -1,10 +1,17 @@
 #include <cstring>
+#include <string>
 
 #include <utils/Utils.h>
 
 #include "Common.h"
 
-ColumnDescriptor::ColumnDescriptor(char const * nm, FieldType tp, uint8_t sz)
+ColumnDescriptor::ColumnDescriptor()
+	: name{}
+	, type(ValueType::UNKNOWN)
+	, size(0)
+{}
+
+ColumnDescriptor::ColumnDescriptor(char const * nm, ValueType tp, uint8_t sz)
 	: name{}
 	, type(tp)
 	, size(sz)
@@ -26,7 +33,7 @@ ColumnDescriptor ColumnDescriptor::Deserialize(char const * data) {
 	return descriptor;
 }
 
-void ColumnDescriptor::Serialize(char * data) {
+void ColumnDescriptor::Serialize(char * data) const {
 	memcpy(data, name, COLUMN_NAME_LENGTH);
 	data += COLUMN_NAME_LENGTH;
 	NumberToBytes(type, data);

@@ -33,57 +33,63 @@ DataPage::~DataPage() {
 		m_pageManager.GetPage(m_id).lock()->Unpin();
 }
 
-bool DataPage::AppendRecord(std::map<std::string, std::string> const & colVals) {
+bool DataPage::AppendRecord(std::map<std::string, Value> const & colVals) {
 	if (!HasFreeSpace())
 		return false;
 
 	auto page = GetNativePage(true);
-	UpdateRecord(m_recordCount, colVals);
+	try {
+		size_t number = m_recordCount;
+		++m_recordCount;
+		UpdateRecord(number, colVals);
+	} catch (...) {
+		--m_recordCount;
+		throw;
+	}
 
-	++m_recordCount;
 	m_freeSpaceOffset += m_recordLength;
 	WriteHeader(page->GetData());
 
 	return true;
 }
 
-void DataPage::UpdateRecord(size_t number, std::map<std::string, std::string> const & colVals) {
+bool DataPage::UpdateRecord(size_t number, std::map<std::string, Value> const & colVals) {
 	auto page = GetNativePage(true);
 	size_t const offset = CalculateRecordOffset(number);
 
 	char * data = page->GetData() + offset;
 	if (*data) // delete bit is set
-		return;
+		return false;
 
 	for (auto const & colVal: colVals) {
 		auto const & descriptor = FindDescriptor(colVal.first);
-		if (!colVal.second.empty() && !CheckType(descriptor, colVal.second)) {
+		if (!colVal.second.IsEmpty() && descriptor.type != colVal.second.GetType()) {
 			std::string field(descriptor.name);
-			throw std::runtime_error("Invalid value for field '" + field + "'.");
+			throw std::runtime_error("Invalid value for field \"" + field + "\".");
 		}
 	}
 	// Values should be inserted after check that all of them are valid.
 	for (auto const & colVal: colVals) {
 		size_t const colOffset = m_columnOffsets[colVal.first];
-		::memcpy(data + colOffset, colVal.second.data(), colVal.second.length());
+		memcpy(data + colOffset, colVal.second.GetBytes(), colVal.second.GetSize());
 	}
+
+	return true;
 }
 
-void DataPage::DeleteRecord(size_t number) {
+bool DataPage::DeleteRecord(size_t number) {
 	size_t const offset = CalculateRecordOffset(number);
 
 	char * recordData = GetNativePage(true)->GetData() + offset;
 	*recordData = 1; // Raising up delete bit. TODO: make constant for delete bit.
+	return true;
 }
 
-Record DataPage::GetRecord(size_t number) {
-	if (m_recordCount <= number)
-		throw std::out_of_range("Trying to access record with number " + std::to_string(number) + ".");
-
+char const * DataPage::GetRawRecord(size_t number) const {
 	size_t const offset = CalculateRecordOffset(number);
 	auto page = GetNativePage();
 
-	return Record(*this, number, page->GetData() + offset, m_columnDescriptors);
+	return page->GetData() + offset;
 }
 
 size_t DataPage::GetRecordCount() const {
@@ -106,8 +112,17 @@ bool DataPage::HasFreeSpace() const {
 	return Page::PAGE_DATA_SIZE >= m_freeSpaceOffset + m_recordLength;
 }
 
-size_t DataPage::CalculateRecordOffset(size_t recordNumber) const {
-	return HEADER_SIZE + m_recordLength * recordNumber;
+size_t DataPage::CalculateRecordOffset(size_t number) const {
+	std::string const error = "Trying to access record with incorrect number:" + std::to_string(number) + ".";
+
+	if (m_recordCount <= number)
+		throw std::runtime_error(error);
+
+	size_t const offset = HEADER_SIZE + m_recordLength * number;
+	if (offset + m_recordLength > Page::PAGE_DATA_SIZE)
+		throw std::runtime_error(error);
+
+	return offset;
 }
 
 void DataPage::ReadHeader(char const * data) {
@@ -131,24 +146,6 @@ std::shared_ptr<Page> DataPage::GetNativePage(bool needDirty) const {
 	if (needDirty)
 		page->SetDirty();
 	return page;
-}
-
-bool DataPage::CheckType(ColumnDescriptor const & descriptor, std::string const & value) {
-	std::stringstream checker(value);
-	if (descriptor.size >= value.length()) {
-		switch (descriptor.type) {
-			case FieldType::DOUBLE:
-				double d;
-				return bool(checker >> d);
-			case FieldType::INT:
-				int i;
-				return bool(checker >> i);
-			case FieldType::VARCHAR:
-				return VARCHAR_MAX_LENGTH > value.length();
-		}
-	}
-
-	return false;
 }
 
 ColumnDescriptor const & DataPage::FindDescriptor(std::string const & name) {
