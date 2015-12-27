@@ -65,7 +65,6 @@ ColumnDescriptors const & Table::GetDescription() const {
 	return m_columnDescriptors;
 }
 
-
 bool Table::Insert(std::vector<std::string> const & columns, Values const & values) {
 	if (columns.size() != values.size() && m_columnDescriptors.size() != values.size()) {
 		Log(LogType::Error) << "Trying to insert " << values.size() << " values"
@@ -85,8 +84,8 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 			colVals[desc.name] = values[i];
 		}
 	else {
-		for (auto const & desc: m_columnDescriptors)
-			colVals[desc.name] = Value{desc.type, ""};
+		for (auto const & descriptor: m_columnDescriptors)
+			colVals[descriptor.name] = Value{descriptor.type, std::string()};
 		for (size_t i = 0; i < columns.size(); ++i)
 			colVals[columns[i]] = values[i];
 	}
