@@ -3,10 +3,12 @@
 #include <string>
 #include <vector>
 
-#include <memory>
-#include "Cursor.h"
 #include <common/Condition.h>
-#include <Page.h>
+#include <backend/Page.h>
+
+#include <memory>
+
+#include "Cursor.h"
 
 class Page;
 class PageManager;
