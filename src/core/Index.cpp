@@ -13,7 +13,13 @@ Index::Index(std::shared_ptr<PageManager> pageManager, std::string const& name, 
 	, m_name(name)
 	, m_column(column)
 	, m_firstPageID(0)
-{}
+{
+	auto firstPage = m_pageManager->AllocatePage().lock();
+	m_firstPageID = firstPage->GetID();
+	firstPage->SetNextPageID(INVALID_PAGE_ID);
+	firstPage->SetPrevPageID(m_firstPageID);
+	firstPage->SetDirty();
+}
 
 Index Index::Deserialize(char const * data, ColumnDescriptors const & columns, std::shared_ptr<PageManager> manager)
 {
@@ -28,7 +34,7 @@ Index Index::Deserialize(char const * data, ColumnDescriptors const & columns, s
 	uint32_t firstPageID = 0;
 	BytesToNumber(data, firstPageID);
 
-	auto const & col = GetDescriptorByName(columns, name);
+	auto const & col = GetDescriptorByName(columns, columnName);
 
 	return Index(manager, name, col, firstPageID);
 }

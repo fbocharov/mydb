@@ -9,9 +9,9 @@
 #include <memory>
 
 #include "Cursor.h"
+#include "PageManager.h"
 
 class Page;
-class PageManager;
 
 static size_t constexpr INDEX_NAME_SIZE = 80;
 static size_t constexpr INDEX_SIZE = INDEX_NAME_SIZE + COLUMN_NAME_LENGTH + sizeof(uint32_t);
