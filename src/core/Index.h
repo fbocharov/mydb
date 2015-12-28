@@ -4,12 +4,11 @@
 #include <vector>
 
 #include <common/Condition.h>
-#include <backend/Page.h>
+#include <backend/PageManager.h>
 
 #include <memory>
 
 #include "Cursor.h"
-#include "PageManager.h"
 
 class Page;
 

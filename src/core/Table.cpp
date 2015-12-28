@@ -52,7 +52,7 @@ Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager
 
 	uint32_t fieldsCount = 0;
 	BytesToNumber(data, fieldsCount);
-	data += 4;
+	data += sizeof(uint32_t);
 	ColumnDescriptors descriptors;
 	for (size_t i = 0; i < fieldsCount; ++i) {
 		auto descriptor = ColumnDescriptor::Deserialize(data);
@@ -62,6 +62,7 @@ Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager
 
 	uint32_t indicesCount = 0;
 	BytesToNumber(data, indicesCount);
+	data += sizeof(uint32_t);
 	Indices indices;
 	for (size_t i = 0; i < indicesCount; ++i) {
 		auto index = Index::Deserialize(data, descriptors, manager);
@@ -80,7 +81,7 @@ void Table::Serialize(Page & page) const {
 
 	auto descriptorCount = m_columnDescriptors.size();
 	NumberToBytes(descriptorCount, data);
-	data += 4;
+	data += sizeof(uint32_t);
 	for (size_t i = 0; i < m_columnDescriptors.size(); ++i) {
 		m_columnDescriptors[i].Serialize(data);
 		data += ColumnDescriptor::DESCRIPTOR_SIZE;
@@ -88,7 +89,7 @@ void Table::Serialize(Page & page) const {
 
 	auto indicesCount = m_indices.size();
 	NumberToBytes(indicesCount, data);
-	data += 4;
+	data += sizeof(uint32_t);
 	for (auto const & ix_kv : m_indices)
 	{
 		ix_kv.second.Serialize(data);
