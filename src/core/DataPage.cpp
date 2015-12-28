@@ -62,7 +62,7 @@ bool DataPage::UpdateRecord(size_t number, std::map<std::string, Value> const & 
 		return false;
 
 	for (auto const & colVal: colVals) {
-		auto const & descriptor = FindDescriptor(colVal.first);
+		auto const & descriptor = GetDescriptorByName(m_columnDescriptors, colVal.first);
 		if (!colVal.second.IsEmpty() && descriptor.type != colVal.second.GetType()) {
 			std::string field(descriptor.name);
 			throw std::runtime_error("Invalid value for field \"" + field + "\".");
@@ -146,11 +146,4 @@ std::shared_ptr<Page> DataPage::GetNativePage(bool needDirty) const {
 	if (needDirty)
 		page->SetDirty();
 	return page;
-}
-
-ColumnDescriptor const & DataPage::FindDescriptor(std::string const & name) {
-	for (auto const & desc: m_columnDescriptors)
-		if (desc.name == name)
-			return desc;
-	throw std::runtime_error("There is no column " + name);
 }

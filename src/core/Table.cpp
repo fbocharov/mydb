@@ -7,8 +7,6 @@
 
 using std::uint32_t;
 
-// ToDo: replace all magic 4 number to sizeof(something)
-
 Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors)
 	: m_pageManager(manager)
 	, m_columnDescriptors(descriptors)
@@ -48,7 +46,7 @@ bool Table::AddBTreeIndex(std::string const & name, ColumnDescriptor const & col
 }
 
 Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager) {
-	auto data = page.GetData();
+	const char * data = page.GetData();
 
 	uint32_t fieldsCount = 0;
 	BytesToNumber(data, fieldsCount);
@@ -77,7 +75,7 @@ Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager
 }
 
 void Table::Serialize(Page & page) const {
-	auto data = page.GetData();
+	char * data = page.GetData();
 
 	auto descriptorCount = m_columnDescriptors.size();
 	NumberToBytes(descriptorCount, data);
@@ -128,7 +126,7 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 		}
 	else {
 		for (auto const & descriptor: m_columnDescriptors)
-            colVals[descriptor.name] = Value(descriptor.type, std::string());
+		colVals[descriptor.name] = Value(descriptor.type, std::string());
 		for (size_t i = 0; i < columns.size(); ++i)
 			colVals[columns[i]] = values[i];
 	}

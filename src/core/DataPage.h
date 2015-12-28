@@ -32,7 +32,6 @@ private:
 	void ReadHeader(char const * data);
 	void WriteHeader(char * data);
 	std::shared_ptr<Page> GetNativePage(bool needDirty = false) const;
-	ColumnDescriptor const & FindDescriptor(std::string const & name);
 
 private:
 	PageManager & m_pageManager;
