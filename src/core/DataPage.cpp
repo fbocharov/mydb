@@ -29,8 +29,9 @@ DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const
 }
 
 DataPage::~DataPage() {
-	if (m_pageManager.PageInCache(m_id))
-		m_pageManager.GetPage(m_id).lock()->Unpin();
+	auto page = GetNativePage(true);
+	WriteHeader(page->GetData());
+	page->Unpin();
 }
 
 bool DataPage::AppendRecord(std::map<std::string, Value> const & colVals) {
