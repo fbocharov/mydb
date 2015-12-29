@@ -10,7 +10,7 @@
 
 #include "DataPage.h"
 
-class ICursor;
+class Cursor;
 
 class Table {
 public:
@@ -22,7 +22,7 @@ public:
 
 	ColumnDescriptors const & GetDescription() const;
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
-	std::unique_ptr<ICursor> GetCursor(Conditions const & conditions = Conditions());
+	std::unique_ptr<Cursor> GetCursor(Conditions const & conditions = Conditions());
 
 private:
 	void AddPage();
