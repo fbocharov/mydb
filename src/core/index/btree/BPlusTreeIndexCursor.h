@@ -3,11 +3,11 @@
 
 #include <backend/PageManager.h>
 #include <common/Condition.h>
-#include <core/Cursor.h>
 
 #include "LeafNode.h"
+#include <core/DeleteCursor.h>
 
-class BPlusTreeIndexCursor : public Cursor {
+class BPlusTreeIndexCursor : public DeleteCursor {
 public:
 	BPlusTreeIndexCursor(PageManager & manager, PageID startPageID, size_t keySize,
 		ColumnDescriptors const & descriptors, Condition const & indexCondition);

@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include <common/Condition.h>
 #include <core/DataPage.h>
 
@@ -8,7 +6,7 @@
 
 BPlusTreeIndexCursor::BPlusTreeIndexCursor(PageManager & manager, PageID startPageID, size_t keySize,
 		ColumnDescriptors const & descriptors, Condition const & indexCondition)
-	: Cursor(descriptors)
+	: DeleteCursor(descriptors)
 	, m_pageManager(manager)
 	, m_indexKeySize(keySize)
 {

@@ -54,6 +54,7 @@ bool DataPage::AppendRecord(std::map<std::string, Value> const & colVals) {
 	return true;
 }
 
+// Deprecated
 bool DataPage::UpdateRecord(size_t number, std::map<std::string, Value> const & colVals) {
 	auto page = GetNativePage(true);
 	size_t const offset = CalculateRecordOffset(number);

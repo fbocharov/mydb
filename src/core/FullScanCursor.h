@@ -4,22 +4,20 @@
 #include <memory>
 
 #include <common/Common.h>
-#include <common/Value.h>
 #include <common/Condition.h>
 
-#include "Cursor.h"
 #include "DataPage.h"
+#include "DeleteCursor.h"
 
-struct PageManager;
+class PageManager;
 
-class FullScanCursor : public Cursor {
+class FullScanCursor : public DeleteCursor {
 public:
 	FullScanCursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors,
 		Conditions const & conditions = Conditions());
 
 	virtual bool HasNext() const override;
 
-	virtual bool Update(std::map<std::string, Value> const & colVals) override;
 	virtual bool Delete() override;
 
 private:

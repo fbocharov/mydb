@@ -9,7 +9,7 @@
 #include <common/Common.h>
 #include <common/Value.h>
 
-struct PageManager;
+class PageManager;
 
 class DataPage {
 public:

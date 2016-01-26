@@ -9,7 +9,7 @@
 #include <sql/SQLStatement.h>
 
 #include "Table.h"
-#include "Cursor.h"
+#include "QueryExecutor.h"
 
 class MyDB {
 public:
@@ -19,14 +19,9 @@ public:
 	ColumnDescriptors const & GetTableDescription(std::string const & tableName) const;
 	bool ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement);
 	size_t ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement);
-	std::unique_ptr<Cursor> ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement);
+	std::unique_ptr<SelectCursor> ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement);
 
 private:
-	bool ExecuteCreateTableStatement(CreateTableStatement const & statement);
-	bool ExecuteCreateIndexStatement(CreateIndexStatement const & statement);
-	bool ExecuteInsertStatement(InsertStatement const & statement);
-	size_t ExecuteUpdateStatement(UpdateStatement const & statement);
-	size_t ExecuteDeleteStatement(DeleteStatement const & statement);
 	Table & FindTable(std::string const & name);
 	void LoadTables();
 	void SaveTables();
@@ -34,6 +29,8 @@ private:
 private:
 	std::shared_ptr<PageManager> m_pageManager;
 	std::map<std::string, Table> m_tables;
+
+	QueryExecutor m_executor;
 
 	static PageID constexpr SYSTEM_PAGE_ID = 0;
 };

@@ -4,6 +4,7 @@
 
 #include "Table.h"
 #include "FullScanCursor.h"
+#include "SelectCursor.h"
 
 using std::uint32_t;
 
@@ -86,16 +87,36 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 		}
 	else {
 		for (auto const & descriptor: m_columnDescriptors)
-			colVals[descriptor.name] = Value{descriptor.type, std::string()};
+            colVals[descriptor.name] = Value(descriptor.type, std::string());
 		for (size_t i = 0; i < columns.size(); ++i)
 			colVals[columns[i]] = values[i];
 	}
 
+	// ToDo: Insert into indices too
+
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<Cursor> Table::GetCursor(Conditions const & conditions) {
-	return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
+std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type, Conditions const& conditions) {
+	switch(type) {
+	case FullScanCursorType:
+	case IndexCursorType:
+	default:
+		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
+	}
+}
+
+std::unique_ptr<SelectCursor> Table::GetSelectCursorByType(CursorType type, Conditions const& conditions) const {
+	switch (type) {
+	case FullScanCursorType:
+	case IndexCursorType:
+	default:
+		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
+	}
+}
+
+bool Table::HasIndex(std::string const& column) const {
+	return false;
 }
 
 void Table::AddPage() {

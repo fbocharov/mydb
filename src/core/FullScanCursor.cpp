@@ -1,12 +1,10 @@
-#include <cassert>
-
 #include <backend/PageManager.h>
 
 #include "FullScanCursor.h"
 
 FullScanCursor::FullScanCursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors,
 		Conditions const & conditions)
-	: Cursor(descriptors)
+	: DeleteCursor(descriptors)
 	, m_pageManager(pageManager)
 	, m_currentPage(std::make_unique<DataPage>(pageManager, startPageID, descriptors))
 	, m_currentRecordNumber(0)
@@ -21,10 +19,6 @@ void FullScanCursor::GoToNextRecord() {
 		m_currentRecordNumber = 0;
 	} else
 		++m_currentRecordNumber;
-}
-
-bool FullScanCursor::Update(std::map<std::string, Value> const & colVals) {
-	return m_currentPage->UpdateRecord(m_currentRecordNumber, colVals);
 }
 
 bool FullScanCursor::Delete() {

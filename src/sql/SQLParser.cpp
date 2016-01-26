@@ -8,6 +8,7 @@
 #include "SQLParserException.h"
 #include "SQLParserInternals.hpp"
 #include "SQLScannerInternals.hpp"
+#include <iterator>
 
 /// Used by generated code to return parsed statement.
 ISQLStatement * parsedStatement;
