@@ -1,9 +1,10 @@
 #ifndef QueryExecutor_h
 #define QueryExecutor_h
-#include "Table.h"
-#include "DeleteCursor.h"
+
 #include <sql/SQLStatement.h>
 
+#include "Table.h"
+#include "DeleteCursor.h"
 
 class QueryExecutor {
 public:

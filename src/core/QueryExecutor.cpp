@@ -81,7 +81,7 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 
 std::unique_ptr<Cursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table const& table)
 {
-	return GetSelectCursor(table, statement.GetConditions());
+	return GetCursor(table, statement.GetConditions());
 }
 
 // TODO: Remove duplicated code
@@ -89,22 +89,22 @@ std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Cond
 {
 	for (auto const & condition : conditions) {
 		if (table.HasIndex(condition.GetColumn())){
-			return table.GetCursorByType(INDEX, conditions);
+			return table.GetDeleteCursorByType(INDEX, conditions);
 		}
 	}
 
-	return table.GetCursorByType(FULL_SCAN, conditions);
+	return table.GetDeleteCursorByType(FULL_SCAN, conditions);
 }
 
-std::unique_ptr<Cursor> QueryExecutor::GetSelectCursor(Table const & table, Conditions const & conditions) const
+std::unique_ptr<Cursor> QueryExecutor::GetCursor(Table const & table, Conditions const & conditions) const
 {
 	{
 		for (auto const & condition : conditions) {
 			if (table.HasIndex(condition.GetColumn())) {
-				return table.GetSelectCursorByType(INDEX, conditions);
+				return table.GetCursorByType(INDEX, conditions);
 			}
 		}
 
-		return table.GetSelectCursorByType(FULL_SCAN, conditions);
+		return table.GetCursorByType(FULL_SCAN, conditions);
 	}
 }
