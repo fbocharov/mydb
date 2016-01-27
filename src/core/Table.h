@@ -9,15 +9,13 @@
 
 #include "DataPage.h"
 
-class SelectCursor;
+class Cursor;
 class DeleteCursor;
 
 enum CursorType {
 	FullScanCursorType,
 	IndexCursorType
 };
-
-class Cursor;
 
 class Table {
 public:
@@ -31,7 +29,7 @@ public:
 
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
 	std::unique_ptr<DeleteCursor> GetCursorByType(CursorType type, Conditions const & conditions = Conditions());
-	std::unique_ptr<SelectCursor> GetSelectCursorByType(CursorType type, Conditions const& conditions = Conditions()) const;
+	std::unique_ptr<Cursor> GetSelectCursorByType(CursorType type, Conditions const& conditions = Conditions()) const;
 
 	bool HasIndex(std::string const & column) const;
 private:

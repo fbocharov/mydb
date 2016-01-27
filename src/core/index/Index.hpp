@@ -6,7 +6,7 @@
 #include <common/Value.h>
 #include <common/Condition.h>
 #include <backend/Page.h>
-#include <core/Cursor.h>
+#include <core/SelectCursor.h>
 
 enum class IndexType : std::uint8_t {
 	BTREE,

@@ -12,6 +12,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 	auto const & updated = statement.GetColVals();
 	auto descs = table.GetDescription();
 	std::vector<std::string> colNames;
+
 	// TODO: move column names receiving to public interface of Table class
 	for(auto const & d : descs) {
 		colNames.push_back(d.name);
@@ -81,7 +82,7 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 	return table.Insert(statement.GetColumns(), statement.GetValues());
 }
 
-std::unique_ptr<SelectCursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table const& table)
+std::unique_ptr<Cursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table const& table)
 {
 	return GetSelectCursor(table, statement.GetConditions());
 }
@@ -102,7 +103,7 @@ std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Cond
 	return table.GetCursorByType(FullScanCursorType, conditions);
 }
 
-std::unique_ptr<SelectCursor> QueryExecutor::GetSelectCursor(Table const & table, Conditions const & conditions) const
+std::unique_ptr<Cursor> QueryExecutor::GetSelectCursor(Table const & table, Conditions const & conditions) const
 {
 	{
 		for (auto const & condition : conditions) {

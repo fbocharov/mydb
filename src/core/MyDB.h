@@ -19,7 +19,7 @@ public:
 	ColumnDescriptors const & GetTableDescription(std::string const & tableName) const;
 	bool ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement);
 	size_t ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement);
-	std::unique_ptr<SelectCursor> ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement);
+	std::unique_ptr<Cursor> ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement);
 
 private:
 	Table & FindTable(std::string const & name);

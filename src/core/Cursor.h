@@ -1,19 +1,16 @@
-#ifndef SelectCursor_h
-#define SelectCursor_h
+#ifndef Cursor_h
+#define Cursor_h
 #include <common/Common.h>
 #include <common/Condition.h>
 #include <backend/Page.h>
 
 class PageManager;
 
-class SelectCursor {
+class Cursor {
 public:
-	virtual ~SelectCursor() = default;
+	virtual ~Cursor() = default;
 
-	SelectCursor(ColumnDescriptors const & descriptors);
-
-	SelectCursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors,
-		Conditions const & conditions, std::vector<std::string> const & fields = std::vector<std::string>());
+	Cursor(ColumnDescriptors const & descriptors);
 
 	Value Get(std::string const & column) const;
 	Values GetAll() const;
@@ -33,4 +30,4 @@ private:
 
 	bool SatisfiesAll() const;
 };
-#endif // SelectCursor_h 
+#endif // Cursor_h 

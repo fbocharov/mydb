@@ -10,10 +10,11 @@
 #include "InnerNode.h"
 #include "LeafNode.h"
 #include "BPlusTreeIndexCursor.h"
+#include <core/QueryExecutor.h>
 
 inline std::unique_ptr<Node> CreateNode(PageManager & manager, PageID pageID, size_t keySize) {
 	auto page = manager.GetPage(pageID).lock();
-	char const * bytes = page.GetData();
+	char const * bytes = page->GetData();
 	NodeType type;
 	BytesToNumber(bytes, type);
 	switch (type) {

@@ -1,14 +1,14 @@
-#include "SelectCursor.h"
+#include "Cursor.h"
 #include <cassert>
 
 // Stub
-SelectCursor::SelectCursor(ColumnDescriptors const& descriptors)
+Cursor::Cursor(ColumnDescriptors const& descriptors)
 	: m_descriptors(descriptors)
 	, m_fields(std::vector<std::string>()) 
 {
 }
 
-Value SelectCursor::Get(std::string const& column) const {
+Value Cursor::Get(std::string const& column) const {
 	char const * record = GetCurrentRecord();
 	assert(!*record); // checking for delete bit
 
@@ -22,7 +22,7 @@ Value SelectCursor::Get(std::string const& column) const {
 	throw std::runtime_error("Record doesn't contain field \"" + column + "\".");
 }
 
-Values SelectCursor::GetAll() const {
+Values Cursor::GetAll() const {
 	char const * record = GetCurrentRecord();
 	Values values;
 	++record; // skip delete bit
@@ -34,7 +34,7 @@ Values SelectCursor::GetAll() const {
 	return values;
 }
 
-bool SelectCursor::Next() {
+bool Cursor::Next() {
 	if (!HasNext())
 		return false;
 
@@ -45,7 +45,7 @@ bool SelectCursor::Next() {
 	return HasNext() && SatisfiesAll();
 }
 
-bool SelectCursor::SatisfiesAll() const
+bool Cursor::SatisfiesAll() const
 {
 	// NOTE: here we use fact that all conditions are connected with AND.
 	// If you wanna add OR you should also change logic here.

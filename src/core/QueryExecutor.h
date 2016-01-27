@@ -17,12 +17,12 @@ public:
 	size_t ExecuteDeleteStatement(DeleteStatement const & statement, Table & table) const;
 	bool ExecuteInsertStatement(InsertStatement const & statement, Table & table) const;
 
-	std::unique_ptr<SelectCursor> ExecuteSelectStatement(SelectStatement const & statement, Table const & table);
+	std::unique_ptr<Cursor> ExecuteSelectStatement(SelectStatement const & statement, Table const & table);
 
 	~QueryExecutor();
 private:
 	std::unique_ptr<DeleteCursor> GetDeleteCursor(Table & table, Conditions const & conditions) const;
-	std::unique_ptr<SelectCursor> GetSelectCursor(Table const & table, Conditions const & conditions) const;
+	std::unique_ptr<Cursor> GetSelectCursor(Table const & table, Conditions const & conditions) const;
 };
 
 #endif // QueryExecutor_h

@@ -4,7 +4,7 @@
 
 #include "Table.h"
 #include "FullScanCursor.h"
-#include "SelectCursor.h"
+#include "Cursor.h"
 
 using std::uint32_t;
 
@@ -106,7 +106,7 @@ std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type, Conditions
 	}
 }
 
-std::unique_ptr<SelectCursor> Table::GetSelectCursorByType(CursorType type, Conditions const& conditions) const {
+std::unique_ptr<Cursor> Table::GetSelectCursorByType(CursorType type, Conditions const& conditions) const {
 	switch (type) {
 	case FullScanCursorType:
 	case IndexCursorType:
