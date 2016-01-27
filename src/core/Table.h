@@ -28,7 +28,7 @@ public:
 	bool HasIndex(std::string const & column) const;
 
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
-	std::unique_ptr<DeleteCursor> GetDeleteCursorByType(CursorType type);
+	std::unique_ptr<DeleteCursor> GetCursorByType(CursorType type);
 
 private:
 	void AddPage();

@@ -28,6 +28,7 @@ public:
 	bool IsEmpty() const;
 	std::string ToString() const;
 
+	friend bool operator==(Value const & left, Value const & right);
 private:
 	ValueType m_type;
 	// NOTE: string here used as buffer either for numbers bytes

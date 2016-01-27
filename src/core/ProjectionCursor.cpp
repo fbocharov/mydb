@@ -1,4 +1,5 @@
 #include "ProjectionCursor.h"
+#include <algorithm>
 
 ProjectionCursor::ProjectionCursor(std::unique_ptr<ICursor> cursor, std::vector<std::string> const& columns)
 	: m_cursor(move(cursor))

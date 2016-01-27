@@ -28,6 +28,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 		
 		table.Insert(colNames, values);
 		cursor->Delete();
+		++updatedCount;
 	}
 
 	return updatedCount;
@@ -57,14 +58,14 @@ std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Cond
 {
 	for (auto const & condition : conditions) {
 		if (table.HasIndex(condition.GetColumn())){
-			return std::make_unique<FilterCursor>(table.GetDeleteCursorByType(INDEX), conditions);
+			return std::make_unique<FilterCursor>(table.GetCursorByType(INDEX), conditions);
 		}
 	}
 
 	if(conditions.size() == 0)
 	{
-		return table.GetDeleteCursorByType(FULL_SCAN);
+		return table.GetCursorByType(FULL_SCAN);
 	}
 
-	return std::make_unique<FilterCursor>(table.GetDeleteCursorByType(FULL_SCAN), conditions);
+	return std::make_unique<FilterCursor>(table.GetCursorByType(FULL_SCAN), conditions);
 }

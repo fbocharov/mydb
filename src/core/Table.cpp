@@ -96,7 +96,7 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<DeleteCursor> Table::GetDeleteCursorByType(CursorType type) {
+std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type) {
 	switch(type) {
 	case FULL_SCAN:
 	case INDEX:
