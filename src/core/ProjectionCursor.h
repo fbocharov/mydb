@@ -1,7 +1,9 @@
 #ifndef ProjectionCursor_h
 #define ProjectionCursor_h
-#include "ICursor.h"
+
 #include <memory>
+
+#include "ICursor.h"
 
 class ProjectionCursor : ICursor {
 public:

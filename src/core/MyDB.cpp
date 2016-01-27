@@ -5,6 +5,7 @@
 #include <utils/Utils.h>
 
 #include "MyDB.h"
+#include "index/btree/BPlusTreeIndex.hpp"
 
 using std::uint32_t;
 
@@ -98,10 +99,11 @@ bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const& statement)
 	return true;
 }
 
-bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const& statement)
+bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement)
 {
-	assert(false && "Create index not implemented.");
-	return false;
+	Table & table = FindTable(statement.GetTableName());
+	std::string const & column = statement.GetColumns().front();
+	return table.CreateIndex(column, statement.GetName(), IndexType::BTREE, statement.IsUnique());
 }
 
 void MyDB::LoadTables() {

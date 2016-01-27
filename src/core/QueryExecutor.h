@@ -15,7 +15,7 @@ public:
 	std::unique_ptr<ICursor> ExecuteSelectStatement(SelectStatement const & statement, Table & table);
 
 private:
-	std::unique_ptr<DeleteCursor> GetDeleteCursor(Table & table, Conditions const & conditions) const;
+	std::unique_ptr<InternalCursor> GetCursor(Table & table, Conditions const & conditions) const;
 };
 
 #endif // QueryExecutor_h

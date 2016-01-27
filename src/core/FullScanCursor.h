@@ -14,8 +14,11 @@ class FullScanCursor : public CursorImpl {
 public:
 	FullScanCursor(PageManager & pageManager, PageID startPageID, ColumnDescriptors const & descriptors);
 
+	virtual PageID GetCurrentPage() const override;
+	virtual std::uint32_t GetCurrentRecordNumber() const override;
 	virtual bool Delete() override;
-	void MoveToBegin() override;
+	virtual void MoveToBegin() override;
+
 private:
 	virtual char const * GetCurrentRecord() const override;
 	virtual void GoToNextRecord() override;

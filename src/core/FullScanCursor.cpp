@@ -21,6 +21,14 @@ void FullScanCursor::GoToNextRecord() {
 		++m_currentRecordNumber;
 }
 
+PageID FullScanCursor::GetCurrentPage() const {
+	return m_currentPage->GetID();
+}
+
+std::uint32_t FullScanCursor::GetCurrentRecordNumber() const {
+	return m_currentRecordNumber;
+}
+
 bool FullScanCursor::Delete() {
 	return m_currentPage->DeleteRecord(m_currentRecordNumber);
 }

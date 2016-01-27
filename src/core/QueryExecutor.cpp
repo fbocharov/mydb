@@ -3,16 +3,15 @@
 
 size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const
 {
-	auto cursor = GetDeleteCursor(table, statement.GetConditions());
+	auto cursor = GetCursor(table, statement.GetConditions());
 
 	auto const & updated = statement.GetColVals();
-	auto descs = table.GetDescription();
+	auto const & descs = table.GetDescription();
 	std::vector<std::string> colNames;
 
 	// TODO: move column names receiving to public interface of Table class
-	for (auto const & d : descs) {
+	for (auto const & d : descs)
 		colNames.push_back(d.name);
-	}
 
 	size_t updatedCount = 0;
 	while (cursor->Next()) {
@@ -25,7 +24,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 				}
 			}
 		}
-		
+
 		table.Insert(colNames, values);
 		cursor->Delete();
 		++updatedCount;
@@ -36,7 +35,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 
 size_t QueryExecutor::ExecuteDeleteStatement(DeleteStatement const& statement, Table & table) const
 {
-	auto cursor = GetDeleteCursor(table, statement.GetConditions());
+	auto cursor = GetCursor(table, statement.GetConditions());
 	size_t deleted = 0;
 	while (cursor->Next())
 		if (cursor->Delete())
@@ -51,21 +50,17 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 
 std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table & table)
 {
-	return GetDeleteCursor(table, statement.GetConditions());
+	return GetCursor(table, statement.GetConditions());
 }
 
-std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Conditions const & conditions) const
+std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const
 {
-	for (auto const & condition : conditions) {
-		if (table.HasIndex(condition.GetColumn())){
-			return std::make_unique<FilterCursor>(table.GetCursorByType(INDEX), conditions);
-		}
-	}
+	for (auto const & condition : conditions)
+		if (table.HasIndex(condition.GetColumn()))
+			return std::make_unique<FilterCursor>(table.GetCursorByType(CursorType::INDEX, condition), conditions);
 
 	if(conditions.size() == 0)
-	{
-		return table.GetCursorByType(FULL_SCAN);
-	}
+		return table.GetCursorByType(CursorType::FULL_SCAN);
 
-	return std::make_unique<FilterCursor>(table.GetCursorByType(FULL_SCAN), conditions);
+	return std::make_unique<FilterCursor>(table.GetCursorByType(CursorType::FULL_SCAN), conditions);
 }

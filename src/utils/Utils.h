@@ -17,4 +17,12 @@ inline void NumberToBytes(T number, char * bytes) {
 	::memcpy(bytes, numberPtr, sizeof(T));
 }
 
+template<typename T>
+T GetValueByOffset(char const * bytes, size_t offset) {
+	T value;
+	bytes += offset;
+	BytesToNumber(bytes, value);
+	return value;
+}
+
 #endif // Utils_h

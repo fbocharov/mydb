@@ -91,22 +91,58 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 			colVals[columns[i]] = values[i];
 	}
 
-	// TODO: Insert into indices too
+	auto recordNumber = m_pageWithSpace->GetRecordCount();
+	auto pageID = m_pageWithSpace->GetID();
+	UpdateIndices(colVals, pageID, recordNumber);
 
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type) {
+bool Table::CreateIndex(std::string const & column, std::string const & name, IndexType type, bool isUnique) {
+	std::shared_ptr<Index> index;
+	auto const & descriptor = FindDescriptor(column);
+	switch (type) {
+		case IndexType::BTREE:
+			switch (descriptor.type) {
+				case ValueType::INT:
+					index = std::make_shared<BPlusTreeIndex<int>>(isUnique, m_pageManager);
+					break;
+				case ValueType::DOUBLE:
+					index = std::make_shared<BPlusTreeIndex<double>>(isUnique, m_pageManager);
+					break;
+				default:
+					throw std::runtime_error("Can't create index for this field: unsupported type.");
+			}
+			break;
+		default:
+			throw std::runtime_error("Unknown index type.");
+	}
+	FillIndex(column, index);
+	m_indices[name] = index;
+	m_columnIndexName[column] = name;
+
+	return true;
+}
+
+
+std::unique_ptr<InternalCursor> Table::GetCursorByType(CursorType type, Condition condition) {
 	switch(type) {
-	case FULL_SCAN:
-	case INDEX:
-	default:
-		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
+		case CursorType::FULL_SCAN:
+			return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
+		case CursorType::INDEX: {
+			auto index = FindIndex(condition.GetColumn());
+			if (!index)
+				throw std::runtime_error("Can't create index cursor: no index for column " +
+										 condition.GetColumn());
+			return index->GetCursor(m_columnDescriptors, condition);
+		}
+		default:
+			throw std::runtime_error("Table::GetCursorByType: unknown cursor type.");
 	}
 }
 
-bool Table::HasIndex(std::string const& column) const {
-	return false;
+bool Table::HasIndex(std::string const & column) const {
+	return nullptr != FindIndex(column);
 }
 
 void Table::AddPage() {
@@ -121,4 +157,36 @@ void Table::AddPage() {
 	lastPage->SetNextPageID(newPageID);
 
 	m_pageWithSpace = std::make_unique<DataPage>(*m_pageManager, newPageID, m_columnDescriptors);
+}
+
+ColumnDescriptor & Table::FindDescriptor(std::string const & name) {
+	for (auto & d: m_columnDescriptors)
+		if (name == d.name)
+			return d;
+	throw std::runtime_error("Table doesn't contain column with name \"" + name + "\".");
+}
+
+void Table::FillIndex(std::string const & column, std::shared_ptr<Index> & index) {
+	auto cursor = GetCursorByType(CursorType::FULL_SCAN);
+	while (cursor->Next())
+		index->Insert(cursor->Get(column), cursor->GetCurrentPage(), cursor->GetCurrentRecordNumber());
+}
+
+std::shared_ptr<Index> Table::FindIndex(std::string const & column) const {
+	auto it = m_columnIndexName.find(column);
+	if (m_columnIndexName.end() != it)
+		return m_indices.find(it->second)->second;
+	return nullptr;
+}
+
+void Table::UpdateIndices(std::map<std::string, Value> const & colVals, PageID pageID, std::uint32_t recordNumber) {
+	for (auto const & columnName: m_columnIndexName) {
+		auto const & column = columnName.first;
+		auto const & indexName = columnName.second;
+		auto index = m_indices[indexName];
+		if (colVals.end() != colVals.find(column)) {
+			auto const & value = colVals.find(column)->second;
+			index->Insert(value, pageID, recordNumber);
+		}
+	}
 }

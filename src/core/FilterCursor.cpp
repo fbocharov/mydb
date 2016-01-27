@@ -1,6 +1,6 @@
 #include "FilterCursor.h"
 
-FilterCursor::FilterCursor(std::unique_ptr<DeleteCursor> cursor, Conditions conditions) 
+FilterCursor::FilterCursor(std::unique_ptr<InternalCursor> cursor, Conditions conditions) 
 	: m_conditions(conditions)
 	, m_cursor(move(cursor))
 {}
@@ -30,6 +30,14 @@ Values FilterCursor::GetAll() const {
 
 void FilterCursor::MoveToBegin() {
 	m_cursor->MoveToBegin();
+}
+
+PageID FilterCursor::GetCurrentPage() const {
+	return m_cursor->GetCurrentPage();
+}
+
+std::uint32_t FilterCursor::GetCurrentRecordNumber() const {
+	return m_cursor->GetCurrentRecordNumber();
 }
 
 bool FilterCursor::Delete() {

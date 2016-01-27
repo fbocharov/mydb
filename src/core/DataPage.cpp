@@ -87,6 +87,12 @@ bool DataPage::DeleteRecord(size_t number) {
 	return true;
 }
 
+bool DataPage::RecordIsDeleted(size_t number) const {
+	char const * record = GetRawRecord(number);
+	return bool(*record);
+}
+
+
 char const * DataPage::GetRawRecord(size_t number) const {
 	size_t const offset = CalculateRecordOffset(number);
 	auto page = GetNativePage();

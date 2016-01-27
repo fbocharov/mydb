@@ -8,8 +8,6 @@
 #include "Common.h"
 #include "Value.h"
 
-class Value;
-
 using Comparator = std::function<bool(Value const &)>;
 
 class Condition {
@@ -17,14 +15,17 @@ public:
 	Condition() = default;
 	template<typename T>
 	Condition(std::string const & column, char op, T value);
-	virtual ~Condition() = default;
 
 	bool Satisfies(Value const & value) const;
 	std::string const & GetColumn() const;
+	char GetOperation() const;
+	Value const & GetValue() const;
 
 protected:
 	std::string m_column;
 	Comparator  m_comparator;
+	char m_operation;
+	Value m_value;
 };
 
 using Conditions = std::vector<Condition>;
@@ -56,6 +57,8 @@ template<typename T>
 Condition::Condition(std::string const & column, char op, T value)
 	: m_column(column)
 	, m_comparator(ComparatorFactory::CreateComparator(op, value))
+	, m_operation(op)
+	, m_value(ValueType::UNKNOWN, value)
 {}
 
 #endif // Condition_h

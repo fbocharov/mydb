@@ -21,6 +21,7 @@ public:
 	bool DeleteRecord(size_t number);
 	char const * GetRawRecord(size_t number) const;
 
+	bool RecordIsDeleted(size_t number) const;
 	size_t GetRecordCount() const;
 	PageID GetID() const;
 	PageID GetNextPageID() const;

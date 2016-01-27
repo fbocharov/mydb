@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "ProjectionCursor.h"
 #include <algorithm>
 
@@ -13,7 +15,7 @@ bool ProjectionCursor::Next()
 
 Value ProjectionCursor::Get(std::string const & column) const
 {
-	if (find(m_fields.begin(), m_fields.end(), column) == m_fields.end())
+	if (std::find(m_fields.begin(), m_fields.end(), column) == m_fields.end())
 		throw std::runtime_error("Column \"" + column + "\" not found in this projection.");
 
 	return m_cursor->Get(column);
