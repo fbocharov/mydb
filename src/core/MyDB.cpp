@@ -31,11 +31,11 @@ bool MyDB::ExecuteCreate(std::unique_ptr<ISQLStatement> const & statement) {
 	switch (statement->GetType()) {
 		case SQLStatementType::CREATE_TABLE: {
 			auto const & create = static_cast<CreateTableStatement &>(*statement);
-			return m_executor.ExecuteCreateTableStatement(create, m_tables, m_pageManager);
+			return ExecuteCreateTableStatement(create);
 		}
 		case SQLStatementType::CREATE_INDEX: {
 			auto const & create = static_cast<CreateIndexStatement &>(*statement);
-			return m_executor.ExecuteCreateIndexStatement(create, FindTable(create.GetName()));
+			return ExecuteCreateIndexStatement(create);
 		}
 		default:
 			throw std::runtime_error("Unknown create statement.");
@@ -72,6 +72,36 @@ std::unique_ptr<Cursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const 
 	auto const & select = static_cast<SelectStatement const &>(*statement);
 	auto & table = FindTable(select.GetTableName());
 	return m_executor.ExecuteSelectStatement(select, table);
+}
+
+bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const& statement)
+{
+
+	auto const & columns = statement.GetColumns();
+	size_t headerSize = 0;
+	for (auto const & column : columns) {
+		size_t nameLen = strlen(column.name);
+		if (nameLen > COLUMN_NAME_LENGTH)
+			throw std::runtime_error("Column name should be less than " +
+				std::to_string(COLUMN_NAME_LENGTH) + "symbols.");
+		headerSize += ColumnDescriptor::DESCRIPTOR_SIZE;
+	}
+	if (headerSize > Page::PAGE_DATA_SIZE)
+		throw std::runtime_error("Too big record length.");
+
+	std::string const & tableName = statement.GetTableName();
+	if (m_tables.find(tableName) != m_tables.end())
+		throw std::runtime_error("Table with name \"" + tableName + "\" already exist.");
+
+	m_tables.emplace(tableName, Table(m_pageManager, columns));
+
+	return true;
+}
+
+bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const& statement)
+{
+	assert(false && "Create index not implemented.");
+	return false;
 }
 
 void MyDB::LoadTables() {

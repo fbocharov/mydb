@@ -22,6 +22,9 @@ public:
 	std::unique_ptr<Cursor> ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement);
 
 private:
+	bool ExecuteCreateTableStatement(CreateTableStatement const& statement);
+	bool ExecuteCreateIndexStatement(CreateIndexStatement const & statement);
+
 	Table & FindTable(std::string const & name);
 	void LoadTables();
 	void SaveTables();

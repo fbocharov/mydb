@@ -8,10 +8,6 @@
 
 class QueryExecutor {
 public:
-	bool ExecuteCreateTableStatement(CreateTableStatement const& statement, 
-			std::map<std::string, Table> & tables, std::shared_ptr<PageManager> pageManager) const;
-	bool ExecuteCreateIndexStatement(CreateIndexStatement const & statement, Table & table) const;
-	
 	size_t ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const;
 	size_t ExecuteDeleteStatement(DeleteStatement const & statement, Table & table) const;
 	bool ExecuteInsertStatement(InsertStatement const & statement, Table & table) const;

@@ -44,35 +44,6 @@ size_t QueryExecutor::ExecuteDeleteStatement(DeleteStatement const& statement, T
 	return deleted;
 }
 
-bool QueryExecutor::ExecuteCreateTableStatement(CreateTableStatement const& statement, std::map<std::string, Table> & tables, std::shared_ptr<PageManager> pageManager) const
-{
-	auto const & columns = statement.GetColumns();
-	size_t headerSize = 0;
-	for (auto const & column : columns) {
-		size_t nameLen = strlen(column.name);
-		if (nameLen > COLUMN_NAME_LENGTH)
-			throw std::runtime_error("Column name should be less than " +
-				std::to_string(COLUMN_NAME_LENGTH) + "symbols.");
-		headerSize += ColumnDescriptor::DESCRIPTOR_SIZE;
-	}
-	if (headerSize > Page::PAGE_DATA_SIZE)
-		throw std::runtime_error("Too big record length.");
-
-	std::string const & tableName = statement.GetTableName();
-	if (tables.find(tableName) != tables.end())
-		throw std::runtime_error("Table with name \"" + tableName + "\" already exist.");
-
-	tables.emplace(tableName, Table(pageManager, columns));
-
-	return true;
-}
-
-bool QueryExecutor::ExecuteCreateIndexStatement(CreateIndexStatement const& statement, Table & table) const
-{
-	assert(false && "Create index not implemented.");
-	return false;
-}
-
 bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Table & table) const
 {
 	return table.Insert(statement.GetColumns(), statement.GetValues());
