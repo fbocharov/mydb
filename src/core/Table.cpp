@@ -20,9 +20,9 @@ Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & des
 	firstPage->SetDirty();
 }
 
-Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & columnDescriptors, PageID firstPage)
+Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, PageID firstPage)
 	: m_pageManager(manager)
-	, m_columnDescriptors(columnDescriptors)
+	, m_columnDescriptors(descriptors)
 	, m_firstPageID(firstPage)
 {
 	PageID lastPageID = m_pageManager->GetPage(firstPage).lock()->GetPrevPageID();
@@ -87,29 +87,29 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 		}
 	else {
 		for (auto const & descriptor: m_columnDescriptors)
-            colVals[descriptor.name] = Value(descriptor.type, std::string());
+			colVals[descriptor.name] = Value(descriptor.type, std::string());
 		for (size_t i = 0; i < columns.size(); ++i)
 			colVals[columns[i]] = values[i];
 	}
 
-	// TODO : Insert into indices too
+	// TODO: Insert into indices too
 
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<DeleteCursor> Table::GetDeleteCursorByType(CursorType type, Conditions const& conditions) {
+std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type, Conditions const& conditions) {
 	switch(type) {
-	case FullScanCursorType:
-	case IndexCursorType:
+	case FULL_SCAN:
+	case INDEX:
 	default:
 		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
 	}
 }
 
-std::unique_ptr<Cursor> Table::GetCursorByType(CursorType type, Conditions const& conditions) const {
+std::unique_ptr<Cursor> Table::GetSelectCursorByType(CursorType type, Conditions const& conditions) const {
 	switch (type) {
-	case FullScanCursorType:
-	case IndexCursorType:
+	case FULL_SCAN:
+	case INDEX:
 	default:
 		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
 	}

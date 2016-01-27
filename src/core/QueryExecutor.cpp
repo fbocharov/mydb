@@ -1,30 +1,27 @@
-#include "QueryExecutor.h"
 #include <cassert>
 
-
-QueryExecutor::QueryExecutor() {
-}
+#include "QueryExecutor.h"
 
 size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const
 {
 	auto cursor = GetDeleteCursor(table, statement.GetConditions());
 
 	auto const & updated = statement.GetColVals();
-	auto const & descs = table.GetDescription();
+	auto descs = table.GetDescription();
 	std::vector<std::string> colNames;
 
 	// TODO: move column names receiving to public interface of Table class
-	for(auto const & d : descs) {
+	for (auto const & d : descs) {
 		colNames.push_back(d.name);
 	}
 
 	size_t updatedCount = 0;
-	while(cursor->HasNext()) {
+	do {
 		cursor->Next();
 		auto values = cursor->GetAll();
-		for(auto const & kv : updated) {
+		for (auto const & kv : updated) {
 			for (size_t i = 0; i < colNames.size(); ++i) {
-				if(kv.first == colNames[i]) {
+				if (kv.first == colNames[i]) {
 					values[i] = kv.second;
 					break;
 				}
@@ -33,7 +30,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 		
 		table.Insert(colNames, values);
 		cursor->Delete();
-	}
+	} while (cursor->HasNext());
 
 	return updatedCount;
 }
@@ -84,34 +81,30 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 
 std::unique_ptr<Cursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table const& table)
 {
-	return GetCursor(table, statement.GetConditions());
-}
-
-QueryExecutor::~QueryExecutor()
-{
+	return GetSelectCursor(table, statement.GetConditions());
 }
 
 // TODO: Remove duplicated code
 std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Conditions const & conditions) const
 {
-	for(auto const & condition : conditions) {
-		if(table.HasIndex(condition.GetColumn())){
-			return table.GetDeleteCursorByType(IndexCursorType, conditions);
+	for (auto const & condition : conditions) {
+		if (table.HasIndex(condition.GetColumn())){
+			return table.GetCursorByType(INDEX, conditions);
 		}
 	}
 
-	return table.GetDeleteCursorByType(FullScanCursorType, conditions);
+	return table.GetCursorByType(FULL_SCAN, conditions);
 }
 
-std::unique_ptr<Cursor> QueryExecutor::GetCursor(Table const & table, Conditions const & conditions) const
+std::unique_ptr<Cursor> QueryExecutor::GetSelectCursor(Table const & table, Conditions const & conditions) const
 {
 	{
 		for (auto const & condition : conditions) {
 			if (table.HasIndex(condition.GetColumn())) {
-				return table.GetCursorByType(IndexCursorType, conditions);
+				return table.GetSelectCursorByType(INDEX, conditions);
 			}
 		}
 
-		return table.GetCursorByType(FullScanCursorType, conditions);
+		return table.GetSelectCursorByType(FULL_SCAN, conditions);
 	}
 }

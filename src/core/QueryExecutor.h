@@ -7,8 +7,6 @@
 
 class QueryExecutor {
 public:
-	QueryExecutor();
-
 	bool ExecuteCreateTableStatement(CreateTableStatement const& statement, 
 			std::map<std::string, Table> & tables, std::shared_ptr<PageManager> pageManager) const;
 	bool ExecuteCreateIndexStatement(CreateIndexStatement const & statement, Table & table) const;
@@ -19,7 +17,6 @@ public:
 
 	std::unique_ptr<Cursor> ExecuteSelectStatement(SelectStatement const & statement, Table const & table);
 
-	~QueryExecutor();
 private:
 	std::unique_ptr<DeleteCursor> GetDeleteCursor(Table & table, Conditions const & conditions) const;
 	std::unique_ptr<Cursor> GetCursor(Table const & table, Conditions const & conditions) const;
