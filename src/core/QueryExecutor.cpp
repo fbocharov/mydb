@@ -98,13 +98,11 @@ std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Cond
 
 std::unique_ptr<Cursor> QueryExecutor::GetCursor(Table const & table, Conditions const & conditions) const
 {
-	{
-		for (auto const & condition : conditions) {
-			if (table.HasIndex(condition.GetColumn())) {
-				return table.GetCursorByType(INDEX, conditions);
-			}
+	for (auto const & condition : conditions) {
+		if (table.HasIndex(condition.GetColumn())) {
+			return table.GetCursorByType(INDEX, conditions);
 		}
-
-		return table.GetCursorByType(FULL_SCAN, conditions);
 	}
+
+	return table.GetCursorByType(FULL_SCAN, conditions);
 }
