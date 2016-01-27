@@ -7,11 +7,13 @@ CursorImpl::CursorImpl(ColumnDescriptors const& descriptors)
 {}
 
 bool CursorImpl::Next() {
-	if (!HasNext())
-		return false;
-	
-	GoToNextRecord();
-	return true;
+	while (HasNext()) {
+		GoToNextRecord();
+		if (static_cast<uint8_t>(*GetCurrentRecord()) == 0)
+			return true;
+	}
+
+	return false;
 }
 
 Value CursorImpl::Get(std::string const& column) const {
