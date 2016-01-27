@@ -92,12 +92,12 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 			colVals[columns[i]] = values[i];
 	}
 
-	// ToDo: Insert into indices too
+	// TODO : Insert into indices too
 
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type, Conditions const& conditions) {
+std::unique_ptr<DeleteCursor> Table::GetDeleteCursorByType(CursorType type, Conditions const& conditions) {
 	switch(type) {
 	case FullScanCursorType:
 	case IndexCursorType:
@@ -106,7 +106,7 @@ std::unique_ptr<DeleteCursor> Table::GetCursorByType(CursorType type, Conditions
 	}
 }
 
-std::unique_ptr<Cursor> Table::GetSelectCursorByType(CursorType type, Conditions const& conditions) const {
+std::unique_ptr<Cursor> Table::GetCursorByType(CursorType type, Conditions const& conditions) const {
 	switch (type) {
 	case FullScanCursorType:
 	case IndexCursorType:

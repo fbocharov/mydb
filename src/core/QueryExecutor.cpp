@@ -10,7 +10,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 	auto cursor = GetDeleteCursor(table, statement.GetConditions());
 
 	auto const & updated = statement.GetColVals();
-	auto descs = table.GetDescription();
+	auto const & descs = table.GetDescription();
 	std::vector<std::string> colNames;
 
 	// TODO: move column names receiving to public interface of Table class
@@ -19,7 +19,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 	}
 
 	size_t updatedCount = 0;
-	do {
+	while(cursor->HasNext()) {
 		cursor->Next();
 		auto values = cursor->GetAll();
 		for(auto const & kv : updated) {
@@ -33,7 +33,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 		
 		table.Insert(colNames, values);
 		cursor->Delete();
-	} while(cursor->HasNext());
+	}
 
 	return updatedCount;
 }
@@ -84,7 +84,7 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 
 std::unique_ptr<Cursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table const& table)
 {
-	return GetSelectCursor(table, statement.GetConditions());
+	return GetCursor(table, statement.GetConditions());
 }
 
 QueryExecutor::~QueryExecutor()
@@ -96,22 +96,22 @@ std::unique_ptr<DeleteCursor> QueryExecutor::GetDeleteCursor(Table & table, Cond
 {
 	for(auto const & condition : conditions) {
 		if(table.HasIndex(condition.GetColumn())){
-			return table.GetCursorByType(IndexCursorType, conditions);
+			return table.GetDeleteCursorByType(IndexCursorType, conditions);
 		}
 	}
 
-	return table.GetCursorByType(FullScanCursorType, conditions);
+	return table.GetDeleteCursorByType(FullScanCursorType, conditions);
 }
 
-std::unique_ptr<Cursor> QueryExecutor::GetSelectCursor(Table const & table, Conditions const & conditions) const
+std::unique_ptr<Cursor> QueryExecutor::GetCursor(Table const & table, Conditions const & conditions) const
 {
 	{
 		for (auto const & condition : conditions) {
 			if (table.HasIndex(condition.GetColumn())) {
-				return table.GetSelectCursorByType(IndexCursorType, conditions);
+				return table.GetCursorByType(IndexCursorType, conditions);
 			}
 		}
 
-		return table.GetSelectCursorByType(FullScanCursorType, conditions);
+		return table.GetCursorByType(FullScanCursorType, conditions);
 	}
 }
