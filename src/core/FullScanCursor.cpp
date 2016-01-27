@@ -6,7 +6,7 @@ FullScanCursor::FullScanCursor(PageManager & pageManager, PageID startPageID, Co
 	: CursorImpl(descriptors)
 	, m_pageManager(pageManager)
 	, m_currentPage(std::make_unique<DataPage>(pageManager, startPageID, descriptors))
-	, m_currentRecordNumber(0)
+	, m_currentRecordNumber(-1)
 	, m_firstPageID(startPageID)
 {}
 
@@ -28,7 +28,7 @@ bool FullScanCursor::Delete() {
 void FullScanCursor::MoveToBegin()
 {
 	m_currentPage = std::make_unique<DataPage>(m_pageManager, m_firstPageID, m_descriptors);
-	m_currentRecordNumber = 0;
+	m_currentRecordNumber = -1;
 }
 
 char const * FullScanCursor::GetCurrentRecord() const {
@@ -36,6 +36,6 @@ char const * FullScanCursor::GetCurrentRecord() const {
 }
 
 bool FullScanCursor::HasNext() const {
-	return m_currentRecordNumber < m_currentPage->GetRecordCount() ||
+	return m_currentRecordNumber + 1 < m_currentPage->GetRecordCount() ||
 		m_currentPage->GetNextPageID() != INVALID_PAGE_ID;
 }

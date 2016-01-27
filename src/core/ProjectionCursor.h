@@ -1,3 +1,5 @@
+#ifndef ProjectionCursor_h
+#define ProjectionCursor_h
 #include "ICursor.h"
 #include <memory>
 
@@ -14,3 +16,5 @@ private:
 	std::unique_ptr<ICursor> m_cursor;
 	std::vector<std::string> m_fields;
 };
+
+#endif // ProjectionCursor_h
