@@ -13,10 +13,7 @@ public:
 	virtual Value Get(std::string const & column) const override;
 	virtual Values GetAll() const override;
 
-	virtual bool Delete() override;
-	virtual void MoveToBegin() override;
 protected:
-	virtual bool HasNext() const override;
 	CursorImpl(ColumnDescriptors const& m_descriptors);
 
 private:

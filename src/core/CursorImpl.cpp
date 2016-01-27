@@ -1,28 +1,40 @@
 #include "CursorImpl.h"
+#include <cassert>
 
 CursorImpl::CursorImpl(ColumnDescriptors const& descriptors)
 	: m_descriptors(descriptors)
 {}
 
 bool CursorImpl::Next() {
-	return false;
+	if (!HasNext())
+		return false;
+	
+	GoToNextRecord();
+	return true;
 }
 
 Value CursorImpl::Get(std::string const& column) const {
-	return Value();
+	char const * record = GetCurrentRecord();
+	assert(!*record); // checking for delete bit
+
+	++record; // skip delete bit
+	for (auto const & descriptor : m_descriptors) {
+		if (descriptor.name == column)
+			return{ descriptor.type, std::string(record, descriptor.size) };
+		record += descriptor.size;
+	}
+
+	throw std::runtime_error("Record doesn't contain field \"" + column + "\".");
 }
 
 Values CursorImpl::GetAll() const {
-	return Values();
-}
+	char const * record = GetCurrentRecord();
+	Values values;
+	++record; // skip delete bit
+	for (auto const & descriptor : m_descriptors) {
+		values.emplace_back(descriptor.type, std::string(record, descriptor.size));
+		record += descriptor.size;
+	}
 
-bool CursorImpl::Delete() {
-	return false;
-}
-
-void CursorImpl::MoveToBegin() {
-}
-
-bool CursorImpl::HasNext() const {
-	return false;
+	return values;
 }
