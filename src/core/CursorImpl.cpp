@@ -9,7 +9,7 @@ CursorImpl::CursorImpl(ColumnDescriptors const& descriptors)
 bool CursorImpl::Next() {
 	while (HasNext()) {
 		GoToNextRecord();
-		if (static_cast<uint8_t>(*GetCurrentRecord()) == 0)
+		if (*GetCurrentRecord() == 0)
 			return true;
 	}
 

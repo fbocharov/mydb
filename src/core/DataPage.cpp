@@ -30,7 +30,6 @@ DataPage::DataPage(PageManager & manager, PageID pageID, ColumnDescriptors const
 
 DataPage::~DataPage() {
 	auto page = GetNativePage(true);
-	WriteHeader(page->GetData());
 	page->Unpin();
 }
 
