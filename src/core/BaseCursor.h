@@ -11,7 +11,5 @@ public:
 	virtual Values GetAll() const = 0;
 
 	virtual void MoveToBegin() = 0;
-protected:
-	virtual bool HasNext() const = 0;
 };
 #endif // BaseCursor_h

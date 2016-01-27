@@ -21,7 +21,3 @@ void JoinCursor::MoveToBegin() {
 	m_left->MoveToBegin();
 	m_right->MoveToBegin();
 }
-
-bool JoinCursor::HasNext() const {
-	return false;
-}

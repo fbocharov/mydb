@@ -1,4 +1,5 @@
 #include "CursorImpl.h"
+#include <stdexcept>
 #include <cassert>
 
 CursorImpl::CursorImpl(ColumnDescriptors const& descriptors)

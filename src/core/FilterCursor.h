@@ -16,9 +16,6 @@ public:
 	void MoveToBegin() override;
 	
 	bool Delete() override;
-protected:
-	bool HasNext() const override;
-
 private:
 	Conditions m_conditions;
 	std::unique_ptr<DeleteNewCursor> m_cursor;

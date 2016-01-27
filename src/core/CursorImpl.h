@@ -17,6 +17,7 @@ protected:
 	CursorImpl(ColumnDescriptors const& m_descriptors);
 
 private:
+	virtual bool HasNext() const = 0;
 	virtual char const * GetCurrentRecord() const = 0;
 	/// Moves cursor to next record. If it was last record does nothing.
 	virtual void GoToNextRecord() = 0;

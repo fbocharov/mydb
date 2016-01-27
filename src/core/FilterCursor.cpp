@@ -6,7 +6,18 @@ FilterCursor::FilterCursor(std::unique_ptr<DeleteNewCursor> cursor, Conditions c
 {}
 
 bool FilterCursor::Next() {
-	return m_cursor->Next();
+	while (m_cursor->Next()) {
+		auto all = true;
+		for (auto const & condition : m_conditions) {
+			auto const & record = m_cursor->Get(condition.GetColumn());
+			all &= condition.Satisfies(record);
+		}
+
+		if (all)
+			return true;
+	}
+
+	return false;
 }
 
 Value FilterCursor::Get(std::string const& column) const {
@@ -23,8 +34,4 @@ void FilterCursor::MoveToBegin() {
 
 bool FilterCursor::Delete() {
 	return m_cursor->Delete();
-}
-
-bool FilterCursor::HasNext() const {
-	return false;
 }

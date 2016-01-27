@@ -16,8 +16,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 	}
 
 	size_t updatedCount = 0;
-	do {
-		cursor->Next();
+	while (cursor->Next()) {
 		auto values = cursor->GetAll();
 		for (auto const & kv : updated) {
 			for (size_t i = 0; i < colNames.size(); ++i) {
@@ -30,7 +29,7 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 		
 		table.Insert(colNames, values);
 		cursor->Delete();
-	} while (cursor->HasNext());
+	}
 
 	return updatedCount;
 }

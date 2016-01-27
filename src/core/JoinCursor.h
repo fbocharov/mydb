@@ -12,9 +12,6 @@ public:
 	virtual Values GetAll() const override;
 	virtual void MoveToBegin() override;
 
-protected:
-	virtual bool HasNext() const override;
-
 private:
 	std::unique_ptr<BaseCursor> m_left;
 	std::unique_ptr<BaseCursor> m_right;
