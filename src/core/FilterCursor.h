@@ -8,13 +8,13 @@ class FilterCursor : public DeleteCursor {
 public:
 	FilterCursor(std::unique_ptr<DeleteCursor> cursor, Conditions conditions = Conditions());
 
-	bool Next() override;
-	Value Get(std::string const& column) const override;
-	Values GetAll() const override;
+	virtual bool Next() override;
+	virtual Value Get(std::string const& column) const override;
+	virtual Values GetAll() const override;
 
-	void MoveToBegin() override;
+	virtual void MoveToBegin() override;
 	
-	bool Delete() override;
+	virtual bool Delete() override;
 private:
 	Conditions m_conditions;
 	std::unique_ptr<DeleteCursor> m_cursor;
