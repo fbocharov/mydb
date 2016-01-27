@@ -11,12 +11,10 @@ Value::Value(ValueType type, std::string const & str)
 			m_bytes = str;
 			m_size = str.size();
 			break;
-		case ValueType::VARCHAR:
+		default:
 			m_bytes = str.c_str();
 			m_size = m_bytes.size() + 1;
 			break;
-		default:
-			throw std::runtime_error("Unknown value type.");
 	}
 }
 
