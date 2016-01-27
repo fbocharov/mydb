@@ -4,7 +4,7 @@
 #include <sql/SQLStatement.h>
 
 #include "Table.h"
-#include "DeleteCursor.h"
+#include "ICursor.h"
 
 class QueryExecutor {
 public:
@@ -12,11 +12,10 @@ public:
 	size_t ExecuteDeleteStatement(DeleteStatement const & statement, Table & table) const;
 	bool ExecuteInsertStatement(InsertStatement const & statement, Table & table) const;
 
-	std::unique_ptr<Cursor> ExecuteSelectStatement(SelectStatement const & statement, Table const & table);
+	std::unique_ptr<ICursor> ExecuteSelectStatement(SelectStatement const & statement, Table & table);
 
 private:
 	std::unique_ptr<DeleteCursor> GetDeleteCursor(Table & table, Conditions const & conditions) const;
-	std::unique_ptr<Cursor> GetCursor(Table const & table, Conditions const & conditions) const;
 };
 
 #endif // QueryExecutor_h

@@ -5,18 +5,20 @@
 #include <common/Condition.h>
 
 #include "LeafNode.h"
-#include <core/DeleteCursor.h>
+#include <core/CursorImpl.h>
 
-class BPlusTreeIndexCursor : public DeleteCursor {
+class BPlusTreeIndexCursor : public CursorImpl {
 public:
+	virtual void MoveToBegin() override;
+	virtual bool Delete() override;
 	BPlusTreeIndexCursor(PageManager & manager, PageID startPageID, size_t keySize,
 		ColumnDescriptors const & descriptors, Condition const & indexCondition);
 
-	virtual bool HasNext() const;
 
 private:
 	virtual char const * GetCurrentRecord() const override;
 	virtual void GoToNextRecord() override;
+	virtual bool HasNext() const override;
 
 private:
 	PageManager & m_pageManager;

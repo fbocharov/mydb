@@ -6,7 +6,7 @@
 #include <common/Value.h>
 #include <common/Condition.h>
 #include <backend/Page.h>
-#include <core/Cursor.h>
+#include <core/BaseCursor.h>
 
 enum class IndexType : std::uint8_t {
 	BTREE,
@@ -20,7 +20,7 @@ public:
 
 	virtual bool Insert(Value key, PageID pageID, std::uint32_t recordNumber) = 0;
 	virtual size_t RemoveSatisfying(Condition const & condition) = 0;
-	virtual std::unique_ptr<Cursor> GetCursor(Condition const & condition) = 0;
+	virtual std::unique_ptr<ICursor> GetCursor(Condition const & condition) = 0;
 
 	std::string const & GetName() const {
 		return m_name;

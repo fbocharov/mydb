@@ -1,10 +1,9 @@
 #ifndef DeleteCursor_h
 #define DeleteCursor_h
-#include "Cursor.h"
+#include "ICursor.h"
 
-class DeleteCursor : public Cursor {
+class DeleteCursor : public ICursor {
 public:
-	DeleteCursor(ColumnDescriptors const & descriptors);
 	virtual bool Delete() = 0;
 };
-#endif // DeleteCursor_h
+#endif // DeleteNewCursor_h

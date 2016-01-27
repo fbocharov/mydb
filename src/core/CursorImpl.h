@@ -1,10 +1,10 @@
 #ifndef CursorImpl_h
 #define CursorImpl_h
 #include <common/Value.h>
-#include "DeleteNewCursor.h"
 #include <common/Common.h>
+#include "DeleteCursor.h"
 
-class CursorImpl : public DeleteNewCursor {
+class CursorImpl : public DeleteCursor {
 public:
 	virtual ~CursorImpl()
 	{}
@@ -16,13 +16,12 @@ public:
 protected:
 	CursorImpl(ColumnDescriptors const& m_descriptors);
 
+	ColumnDescriptors const & m_descriptors;
+
 private:
 	virtual bool HasNext() const = 0;
 	virtual char const * GetCurrentRecord() const = 0;
 	/// Moves cursor to next record. If it was last record does nothing.
 	virtual void GoToNextRecord() = 0;
-
-private:
-	ColumnDescriptors const & m_descriptors;
 };
 #endif // CursorImpl_h

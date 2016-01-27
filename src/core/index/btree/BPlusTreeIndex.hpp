@@ -37,7 +37,7 @@ public:
 
 	virtual bool Insert(Value key, PageID pageID, std::uint32_t recordNumber) override;
 	virtual size_t RemoveSatisfying(Condition const & condition) override;
-	virtual std::unique_ptr<Cursor> GetCursor(Condition const & indexCondition) override;
+	virtual std::unique_ptr<ICursor> GetCursor(Condition const & indexCondition) override;
 
 private:
 	PageID FindLeaf(PageID pageID, Condition const & condition) const;
@@ -69,7 +69,7 @@ size_t BPlusTreeIndex<KeyT>::RemoveSatisfying(Condition const & condition) {
 }
 
 template<typename KeyT>
-std::unique_ptr<Cursor> BPlusTreeIndex<KeyT>::GetCursor(Condition const & indexCondition) {
+std::unique_ptr<ICursor> BPlusTreeIndex<KeyT>::GetCursor(Condition const & indexCondition) {
 	auto leafPageID = FindLeaf(m_rootPageID, indexCondition);
 	return std::make_unique<BPlusTreeIndexCursor>(m_pageManager, leafPageID, indexCondition);
 }

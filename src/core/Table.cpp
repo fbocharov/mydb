@@ -4,7 +4,6 @@
 
 #include "Table.h"
 #include "FullScanCursor.h"
-#include "Cursor.h"
 
 using std::uint32_t;
 
@@ -97,21 +96,12 @@ bool Table::Insert(std::vector<std::string> const & columns, Values const & valu
 	return m_pageWithSpace->AppendRecord(colVals);
 }
 
-std::unique_ptr<DeleteCursor> Table::GetDeleteCursorByType(CursorType type, Conditions const& conditions) {
+std::unique_ptr<DeleteCursor> Table::GetDeleteCursorByType(CursorType type) {
 	switch(type) {
 	case FULL_SCAN:
 	case INDEX:
 	default:
-		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
-	}
-}
-
-std::unique_ptr<Cursor> Table::GetCursorByType(CursorType type, Conditions const& conditions) const {
-	switch (type) {
-	case FULL_SCAN:
-	case INDEX:
-	default:
-		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors, conditions);
+		return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
 	}
 }
 

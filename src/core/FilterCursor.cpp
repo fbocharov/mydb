@@ -1,6 +1,6 @@
 #include "FilterCursor.h"
 
-FilterCursor::FilterCursor(std::unique_ptr<DeleteNewCursor> cursor, Conditions conditions) 
+FilterCursor::FilterCursor(std::unique_ptr<DeleteCursor> cursor, Conditions conditions) 
 	: m_conditions(conditions)
 	, m_cursor(move(cursor))
 {}

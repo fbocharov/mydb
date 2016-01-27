@@ -2,9 +2,9 @@
 #define BaseCursor_h
 #include <common/Value.h>
 
-class BaseCursor {
+class ICursor {
 public:
-	virtual ~BaseCursor() = default;
+	virtual ~ICursor() = default;
 
 	virtual bool Next() = 0;
 	virtual Value Get(std::string const & column) const = 0;

@@ -9,7 +9,6 @@
 
 #include "DataPage.h"
 
-class Cursor;
 class DeleteCursor;
 
 enum CursorType {
@@ -29,8 +28,7 @@ public:
 	bool HasIndex(std::string const & column) const;
 
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
-	std::unique_ptr<DeleteCursor> GetDeleteCursorByType(CursorType type, Conditions const & conditions = Conditions());
-	std::unique_ptr<Cursor> GetCursorByType(CursorType type, Conditions const& conditions = Conditions()) const;
+	std::unique_ptr<DeleteCursor> GetDeleteCursorByType(CursorType type);
 
 private:
 	void AddPage();

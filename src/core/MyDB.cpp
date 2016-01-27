@@ -63,7 +63,7 @@ size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
 	}
 }
 
-std::unique_ptr<Cursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement) {
+std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement) {
 	assert(statement);
 
 	if (SQLStatementType::SELECT != statement->GetType())

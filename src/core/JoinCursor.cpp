@@ -1,6 +1,6 @@
 #include "JoinCursor.h"
 
-JoinCursor::JoinCursor(std::unique_ptr<BaseCursor> left, std::unique_ptr<BaseCursor> right)
+JoinCursor::JoinCursor(std::unique_ptr<ICursor> left, std::unique_ptr<ICursor> right)
 	: m_left(move(left))
 	, m_right(move(right))
 {}

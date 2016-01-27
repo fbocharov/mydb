@@ -4,9 +4,17 @@
 #include "BPlusTreeIndexCursor.h"
 #include "LeafNode.h"
 
+void BPlusTreeIndexCursor::MoveToBegin()
+{}
+
+bool BPlusTreeIndexCursor::Delete()
+{
+	return false;
+}
+
 BPlusTreeIndexCursor::BPlusTreeIndexCursor(PageManager & manager, PageID startPageID, size_t keySize,
 		ColumnDescriptors const & descriptors, Condition const & indexCondition)
-	: DeleteCursor(descriptors)
+	: CursorImpl(descriptors)
 	, m_pageManager(manager)
 	, m_indexKeySize(keySize)
 {
