@@ -81,7 +81,7 @@ void InnerNode<KeyT>::Insert(KeyT key, PageID right) {
 	size_t geEntry = FindFirstGEEntry(key);
 	size_t offset = CalculateEntryOffset(geEntry) + sizeof(PageID);
 
-	memmove(m_bytes + offset + m_entrySize, m_bytes + offset, m_entrySize);
+	memmove(m_bytes + offset + m_entrySize, m_bytes + offset, (entryCount - geEntry) * m_entrySize);
 
 	NumberToBytes(key, m_bytes + offset);
 	offset += sizeof(KeyT);
@@ -106,7 +106,7 @@ KeyT InnerNode<KeyT>::TransferHalf(char * nodeBytes) {
 	Node::InitNode(m_bytes, NodeType::INNER_NODE, keyCount - transKeysCount - 1);
 
 	// returning key that was in between left and moved parts
-	offset = CalculateEntryOffset(keyCount / 2);
+	offset = CalculateEntryOffset(keyCount / 2) + sizeof(PageID);
 	return GetValueByOffset<KeyT>(m_bytes, offset);
 }
 

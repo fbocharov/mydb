@@ -84,7 +84,7 @@ template<typename KeyT>
 void LeafNode<KeyT>::Insert(KeyT key, PageID pageID, uint32_t recordNumber, bool unique) {
 	size_t keyCount = GetEntryCount();
 	size_t i = 0;
-	char * bytes = m_bytes + sizeof(NodeType) + sizeof(std::uint32_t);
+	char * bytes = m_bytes + CalculateEntryOffset(0);
 	for (; i < keyCount; ++i) {
 		KeyT currentKey = GetValueByOffset<KeyT>(bytes, 0);
 		if (currentKey == key && unique)
@@ -99,7 +99,7 @@ void LeafNode<KeyT>::Insert(KeyT key, PageID pageID, uint32_t recordNumber, bool
 	NumberToBytes(key, bytes);
 	bytes += sizeof(key);
 
-	NumberToBytes(0, bytes);
+	NumberToBytes<std::uint8_t>(0, bytes);
 	bytes += sizeof(std::uint8_t);
 
 	NumberToBytes(pageID, bytes);

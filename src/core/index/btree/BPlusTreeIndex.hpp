@@ -13,7 +13,7 @@
 #include "BPlusTreeIndexCursor.h"
 
 
-template<typename KeyT, size_t TreeOrder = 64>
+template<typename KeyT, size_t TreeOrder = 128>
 class BPlusTreeIndex : public Index {
 public:
 	BPlusTreeIndex(bool isUnique, std::shared_ptr<PageManager> manager);
@@ -29,7 +29,7 @@ public:
 
 private:
 	PageID FindLeaf(PageID nodeID, Condition const & condition) const;
-	PageID FindLeafToInsert(PageID nodeID, KeyT key);
+	void DoInsert(PageID nodeID, KeyT key, PageID recordPage, uint32_t recordNumber);
 	void SplitChild(PageID parentID, PageID childID);
 
 private:
@@ -46,6 +46,7 @@ BPlusTreeIndex<KeyT, TreeOrder>::BPlusTreeIndex(bool isUnique, std::shared_ptr<P
 	auto page = m_pageManager->AllocatePage().lock();
 	m_rootPageID = page->GetID();
 	LeafNode<KeyT>::InitNode(page->GetData());
+	page->SetNextPageID(INVALID_PAGE_ID);
 	page->SetDirty();
 }
 
@@ -74,19 +75,11 @@ std::shared_ptr<Index> BPlusTreeIndex<KeyT, TreeOrder>::Deserialize(char const *
 
 template<typename KeyT, size_t TreeOrder>
 bool BPlusTreeIndex<KeyT, TreeOrder>::Insert(Value const & key, PageID pageID, std::uint32_t recordNumber) {
-	KeyT k = key.Get<KeyT>();
-	PageID leafID = FindLeafToInsert(m_rootPageID, k);
-
-	auto leafPage = m_pageManager->GetPage(leafID).lock();
-	char * bytes = leafPage->GetData();
-	LeafNode<KeyT> leaf(bytes);
-	leaf.Insert(k, pageID, recordNumber, m_isUnique);
-	leafPage->SetDirty();
+	DoInsert(m_rootPageID, key.Get<KeyT>(), pageID, recordNumber);
 
 	auto rootPage = m_pageManager->GetPage(m_rootPageID).lock();
-	bytes = rootPage->GetData();
-	Node node(bytes);
-	if (node.GetEntryCount() == TreeOrder) {
+	Node root(rootPage->GetData());
+	if (root.GetEntryCount() == TreeOrder) {
 		auto newRootPage = m_pageManager->AllocatePage().lock();
 		SplitChild(newRootPage->GetID(), m_rootPageID);
 		m_rootPageID = newRootPage->GetID();
@@ -141,21 +134,23 @@ PageID BPlusTreeIndex<KeyT, TreeOrder>::FindLeaf(PageID nodeID, Condition const 
 }
 
 template<typename KeyT, size_t TreeOrder>
-PageID BPlusTreeIndex<KeyT, TreeOrder>::FindLeafToInsert(PageID nodeID, KeyT key) {
+void BPlusTreeIndex<KeyT, TreeOrder>::DoInsert(PageID nodeID, KeyT key, PageID recordPage, std::uint32_t recordNumber) {
 	char * bytes = m_pageManager->GetPage(nodeID).lock()->GetData();
-	if (Node(bytes).IsLeaf())
-		return nodeID;
+	if (Node(bytes).IsLeaf()) {
+		LeafNode<KeyT> leaf(bytes);
+		leaf.Insert(key, recordPage, recordNumber, m_isUnique);
+		m_pageManager->GetPage(nodeID).lock()->SetDirty();
+		return;
+	}
 
 	InnerNode<KeyT> innerNode(bytes);
 	PageID childID = innerNode.GetNextNodePage(key);
 
-	PageID leafID = FindLeafToInsert(childID, key);
+	DoInsert(childID, key, recordPage, recordNumber);
 
 	bytes = m_pageManager->GetPage(childID).lock()->GetData();
 	if (Node(bytes).GetEntryCount() == TreeOrder)
 		SplitChild(nodeID, childID);
-
-	return leafID;
 }
 
 template<typename KeyT, size_t TreeOrder>

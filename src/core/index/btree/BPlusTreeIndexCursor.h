@@ -87,13 +87,12 @@ template<typename KeyT>
 bool BPlusTreeIndexCursor<KeyT>::HasNext() const {
 	LeafNode<KeyT> leaf(GetPageBytes());
 
-	if (m_currentEntry + 1 >= LeafNode<KeyT>(GetPageBytes()).GetEntryCount() &&
-			INVALID_PAGE_ID == m_pageManager.GetPage(m_currentEntry).lock()->GetNextPageID())
-		return false;
+	if (m_currentEntry + 1 < LeafNode<KeyT>(GetPageBytes()).GetEntryCount()) {
+		Value value(ValueType::UNKNOWN, leaf.GetKey(m_currentEntry + 1));
+		return m_from.Satisfies(value) && m_to.Satisfies(value);
+	}
 
-	Value value(ValueType::UNKNOWN, leaf.GetKey(m_currentEntry + 1));
-
-	return m_from.Satisfies(value) && m_to.Satisfies(value);
+	return INVALID_PAGE_ID != m_pageManager.GetPage(m_currentPage).lock()->GetNextPageID();
 }
 
 template<typename KeyT>
