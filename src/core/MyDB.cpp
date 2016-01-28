@@ -101,7 +101,7 @@ bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const& statement)
 bool MyDB::ExecuteCreateIndexStatement(CreateIndexStatement const & statement)
 {
 	Table & table = FindTable(statement.GetTableName());
-	std::string const & column = statement.GetColumns().front();
+	std::string const & column = statement.GetFields().front();
 	return table.CreateIndex(column, statement.GetName(), IndexType::BTREE, statement.IsUnique());
 }
 

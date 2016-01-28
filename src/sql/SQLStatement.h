@@ -60,6 +60,21 @@ private:
 	Conditions m_conditions;
 };
 
+class WithFields {
+public:
+	WithFields(std::vector<std::string> const & fields)
+		: m_fields(fields)
+	{}
+	virtual ~WithFields() = default;
+
+	std::vector<std::string> const & GetFields() const {
+		return m_fields;
+	}
+
+private:
+	std::vector<std::string> m_fields;
+};
+
 class CreateTableStatement : public ISQLStatement {
 public:
 	CreateTableStatement(std::string const & tableName, ColumnDescriptors const & columns)
@@ -75,22 +90,18 @@ private:
 	ColumnDescriptors const m_columns; /// first -- name, second -- type
 };
 
-class CreateIndexStatement : public ISQLStatement {
+class CreateIndexStatement : public ISQLStatement, public WithFields {
 public:
 	CreateIndexStatement(std::string const & tableName, std::string const & indexName,
-			std::vector<std::string> const & columns, bool isUnique = false)
+			std::vector<std::string> const & fields, bool isUnique = false)
 		: ISQLStatement(SQLStatementType::CREATE_INDEX, tableName)
+		, WithFields(fields)
 		, m_name(indexName)
-		, m_columns(columns)
 		, m_isUnique(isUnique)
 	{}
 
 	std::string const & GetName() const {
 		return m_name;
-	}
-
-	std::vector<std::string> const & GetColumns() const {
-		return m_columns;
 	}
 
 	bool IsUnique() const {
@@ -99,83 +110,68 @@ public:
 
 private:
 	std::string const m_name;
-	std::vector<std::string> const m_columns;
 	bool const m_isUnique;
 };
 
-class SelectStatement : public ISQLStatement, public WithConditions {
+class SelectStatement : public ISQLStatement, public WithConditions, public WithFields {
 public:
 	SelectStatement(std::string const & tableName, std::vector<std::string> const & fields,
 			Conditions const & clause = Conditions())
 		: ISQLStatement(SQLStatementType::SELECT, tableName)
 		, WithConditions(clause)
-		, m_fields(fields)
+		, WithFields(fields)
 	{}
-
-	std::vector<std::string> const & GetFields() const {
-		return m_fields;
-	}
-
-private:
-	std::vector<std::string> const m_fields;
 };
 
-class JoinSelectStatement : public ISQLStatement, public WithConditions {
-public:
-	JoinSelectStatement(std::string const & leftTable, std::string const & rightTable,
-		std::vector<std::string> const & fields, std::string const & leftField,
-		std::string const & rightField, Conditions const & clause = Conditions())
-		: ISQLStatement(SQLStatementType::SELECT, leftTable)
-		, WithConditions(clause)
-		, m_selectStatement(leftTable, fields, clause) 
-	{};
+//class JoinStatement : public ISQLStatement, public WithConditions, public WithFields {
+//public:
+//	JoinStatement(std::string const & leftTable, std::string const & rightTable,
+//			std::vector<std::string> const & fields, std::string const & leftField,
+//			std::string const & rightField, Conditions const & clause = Conditions())
+//		: ISQLStatement(SQLStatementType::SELECT, leftTable)
+//		, WithConditions(clause)
+//		, WithFields(fields)
+//		, m_selectStatement(leftTable, fields, clause)
+//	{}
 
-	std::vector<std::string> const & GetFields() const {
-		return m_selectStatement.GetFields();
-	}
+//	std::string const & GetLeftTable() const {
+//		return m_selectStatement.GetTableName();
+//	}
 
-	std::string const & GetLeftTable() const {
-		return m_selectStatement.GetTableName();
-	}
+//	std::string const & GetRightTable() const {
+//		return m_rightTable;
+//	}
 
-	std::string const & GetRightTable() const {
-		return m_rightTable;
-	}
+//	std::pair<std::string, std::string> GetJoinFields() const {
+//		return std::make_pair<std::string, std::string>(m_leftField, m_rightField);
+//	}
 
-	std::pair<std::string, std::string> GetJoinFields() const {
-		return std::pair<std::string, std::string>(m_leftField, m_rightField);
-	}
+//private:
+//	SelectStatement const m_selectStatement;
 
-private:
-	SelectStatement const m_selectStatement;
+//	std::string const m_rightTable;
+//	std::string const m_leftField;
+//	std::string const m_rightField;
+//};
 
-	std::string const m_rightTable;
-	std::string const m_leftField;
-	std::string const m_rightField;
-};
-
-class InsertStatement : public ISQLStatement {
+class InsertStatement : public ISQLStatement, public WithFields {
 public:
 	InsertStatement(std::string const & tableName, std::vector<std::string> const & columns,
 			Values const & values)
 		: ISQLStatement(SQLStatementType::INSERT, tableName)
-		, m_columns(columns)
+		, WithFields(columns)
 		, m_values(values)
 	{}
+
 	InsertStatement(std::string const & tableName, Values const & values)
 		: InsertStatement(tableName, std::vector<std::string>(), values)
 	{}
-
-	std::vector<std::string> const & GetColumns() const {
-		return m_columns;
-	}
 
 	Values const & GetValues() const {
 		return m_values;
 	}
 
 private:
-	std::vector<std::string> const m_columns;
 	Values const m_values;
 };
 

@@ -46,17 +46,16 @@ size_t QueryExecutor::ExecuteDeleteStatement(DeleteStatement const& statement, T
 
 bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Table & table) const
 {
-	return table.Insert(statement.GetColumns(), statement.GetValues());
+	return table.Insert(statement.GetFields(), statement.GetValues());
 }
 
 std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table & table)
 {
-	if(statement.GetFields().size() == 0)
-	{
+	auto fields = statement.GetFields();
+	if (fields.empty())
 		return GetCursor(table, statement.GetConditions());
-	}
 
-	return std::make_unique<ProjectionCursor>(GetCursor(table, statement.GetConditions()), statement.GetFields());
+	return std::make_unique<ProjectionCursor>(GetCursor(table, statement.GetConditions()), fields);
 }
 
 std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const

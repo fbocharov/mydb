@@ -16,23 +16,21 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 	auto tableDescription = db.GetTableDescription(statement->GetTableName());
 
 	auto const & select = static_cast<SelectStatement const &>(*statement);
-	if (select.GetFields().size() != 0) {
+	auto fields = select.GetFields();
+	if (!fields.empty()) {
 		ColumnDescriptors descriptors;
 
-		for (auto const & fieldName : select.GetFields())
+		for (auto const & field : fields)
 			for (auto const & desc : tableDescription)
-				if (fieldName == desc.name)
+				if (field == desc.name)
 					descriptors.push_back(desc);
 
 		printer.PrintHeading(descriptors);
-	} 
-	else {
+	} else
 		printer.PrintHeading(tableDescription);
-	}
 
-	while (cursor->Next()) {
+	while (cursor->Next())
 		printer.PrintLine(cursor->GetAll());
-	}
 }
 
 void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, CSVPrinter & printer) {
