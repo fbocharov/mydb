@@ -169,7 +169,7 @@ U_FLD_VALS  : IDENTIFIER EQ INT_NUM    { $$ = new std::map<std::string, Value>()
             | IDENTIFIER EQ WORD ',' U_FLD_VALS {$$ = new std::map<std::string, Value>(); (*$$)[$1] = Value{ValueType::VARCHAR,std::string($3)};
                                                  $$->insert($5->begin(), $5->end()); free($1); free($3); delete $5; }
             ;
-CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateTableStatement($3, *$5); delete $5; free($3); delete $5; }
+CREATE_T_S  : CREATE TABLE IDENTIFIER '(' NT_VECTOR ')' { $$ = new CreateTableStatement($3, *$5); delete $5; free($3); }
             ;
 CREATE_I_S  : CREATE INDEX IDENTIFIER ON IDENTIFIER '(' COL_VECTOR ')' USING BTREE { $$ = new CreateIndexStatement($5, $3, *$7); delete $7; 
                                                                                      free($3); free($5); }
