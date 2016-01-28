@@ -120,6 +120,40 @@ private:
 	std::vector<std::string> const m_fields;
 };
 
+class JoinSelectStatement : public ISQLStatement, public WithConditions {
+public:
+	JoinSelectStatement(std::string const & leftTable, std::string const & rightTable,
+		std::vector<std::string> const & fields, std::string const & leftField,
+		std::string const & rightField, Conditions const & clause = Conditions())
+		: ISQLStatement(SQLStatementType::SELECT, leftTable)
+		, WithConditions(clause)
+		, m_selectStatement(leftTable, fields, clause) 
+	{};
+
+	std::vector<std::string> const & GetFields() const {
+		return m_selectStatement.GetFields();
+	}
+
+	std::string const & GetLeftTable() const {
+		return m_selectStatement.GetTableName();
+	}
+
+	std::string const & GetRightTable() const {
+		return m_rightTable;
+	}
+
+	std::pair<std::string, std::string> GetJoinFields() const {
+		return std::pair<std::string, std::string>(m_leftField, m_rightField);
+	}
+
+private:
+	SelectStatement const m_selectStatement;
+
+	std::string const m_rightTable;
+	std::string const m_leftField;
+	std::string const m_rightField;
+};
+
 class InsertStatement : public ISQLStatement {
 public:
 	InsertStatement(std::string const & tableName, std::vector<std::string> const & columns,
