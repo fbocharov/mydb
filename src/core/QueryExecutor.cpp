@@ -52,11 +52,22 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 
 std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table & table)
 {
-	auto fields = statement.GetFields();
-	if (fields.empty())
-		return GetCursor(table, statement.GetConditions());
+	Conditions conditions;
+	for (auto & condition : statement.GetConditions()) {
+		auto const splited = SplitQualified(condition.GetColumn());
+		conditions.push_back(Condition(splited.second, condition.GetOperation(), condition.GetValue().Get()));
+	}
 
-	return std::make_unique<ProjectionCursor>(GetCursor(table, statement.GetConditions()), fields);
+	auto plannedCursor = PlaneQuery(table, conditions);
+	auto filteredCursor = conditions.empty()
+		? move(plannedCursor)
+		: std::make_unique<FilterCursor>(move(plannedCursor), conditions);
+
+	auto fields = SplitQualifiedVectorUnzip(statement.GetFields());
+	if (fields.second.empty())
+		return std::move(filteredCursor);
+
+	return std::make_unique<ProjectionCursor>(std::move(filteredCursor), fields.second);
 }
 
 std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const& statement, Table& leftTable, Table& rightTable)
@@ -65,6 +76,30 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const
 	auto rightCursor = rightTable.GetFullScanCursor();
 	auto joinFields = statement.GetJoinFields();
 	return std::make_unique<JoinCursor>(move(leftCursor), move(rightCursor), joinFields.first, joinFields.second);
+}
+
+std::unique_ptr<InternalCursor> QueryExecutor::PlaneQuery(Table& table, Conditions const& conditions) const
+{
+	for (auto const & condition : conditions) {
+		if (table.HasIndex(condition.GetColumn())) {
+			auto op = condition.GetOperation();
+			if (op != '=') {
+				auto inverted = op == '>' ? '<' : '>';
+				for (auto const & secondCondition : conditions) {
+					if (secondCondition.GetColumn() == condition.GetColumn()
+						&& secondCondition.GetOperation() == inverted) {
+						return op == '<'
+							? table.GetIndexCursor(secondCondition, condition)
+							: table.GetIndexCursor(condition, secondCondition);
+					}
+				}
+			}
+
+			return table.GetIndexCursor(condition, condition);
+		}
+	}
+
+	return table.GetFullScanCursor();
 }
 
 std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const
@@ -85,12 +120,12 @@ std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditio
 				}
 			}
 
-			return std::make_unique<FilterCursor>(table.GetIndexCursor(condition, condition));
+			return std::make_unique<FilterCursor>(table.GetIndexCursor(condition, condition), conditions);
 		}
 	}
 		
 
-	if(conditions.size() == 0)
+	if(conditions.empty())
 		return table.GetFullScanCursor();
 
 	return std::make_unique<FilterCursor>(table.GetFullScanCursor(), conditions);

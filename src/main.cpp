@@ -48,6 +48,7 @@ void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statemen
 			std::cout << "OK " << rows << std::endl;
 			break;
 		}
+		case SQLStatementType::SELECT_JOIN:
 		case SQLStatementType::SELECT: {
 			ExecuteSelect(db, statement, printer);
 			break;

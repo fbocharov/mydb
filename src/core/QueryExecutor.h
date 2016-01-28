@@ -16,6 +16,7 @@ public:
 	std::unique_ptr<ICursor> ExecuteJoinStatement(JoinStatement const & statement, 
 			Table & leftTable, Table & rightTable);
 private:
+	std::unique_ptr<InternalCursor> PlaneQuery(Table & table, Conditions const & conditions) const;
 	std::unique_ptr<InternalCursor> GetCursor(Table & table, Conditions const & conditions) const;
 };
 
