@@ -204,6 +204,7 @@ std::unique_ptr<InternalCursor> QueryExecutor::PlaneQuery(Table& table, Conditio
 			return table.GetIndexCursor(condition, condition);
 		}
 	}
+		
 
 	return table.GetFullScanCursor();
 }
