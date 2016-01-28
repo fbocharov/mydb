@@ -20,11 +20,14 @@ enum class CursorType {
 
 class Table {
 public:
-	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors);
-	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, PageID firstPage);
+	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, std::string const & name);
+	Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, 
+			PageID firstPage, std::string const & name);
 
 	void Serialize(Page & page) const;
-	static Table Deserialize(Page const & page, std::shared_ptr<PageManager> manager);
+	static Table Deserialize(Page const & page, std::shared_ptr<PageManager> manager, std::string const & name);
+
+	std::string const & GetName() const;
 
 	ColumnDescriptors const & GetDescription() const;
 	bool HasIndex(std::string const & column) const;
@@ -50,6 +53,7 @@ private:
 	std::unique_ptr<DataPage> m_pageWithSpace;
 	std::map<std::string, std::string> m_columnIndexName;
 	std::map<std::string, std::shared_ptr<Index>> m_indices;
+	std::string const m_name;
 };
 
 #endif // Table_h

@@ -35,3 +35,13 @@ void ProjectionCursor::MoveToBegin()
 {
 	m_cursor->MoveToBegin();
 }
+
+std::string const& ProjectionCursor::GetTableName() const
+{
+	return m_cursor->GetTableName();
+}
+
+void ProjectionCursor::SetTableName(std::string const& value)
+{
+	m_cursor->SetTableName(value);
+}

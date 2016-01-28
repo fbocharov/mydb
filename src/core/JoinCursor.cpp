@@ -50,3 +50,13 @@ void JoinCursor::MoveToBegin() {
 	m_left->MoveToBegin();
 	m_right->MoveToBegin();
 }
+
+std::string const& JoinCursor::GetTableName() const
+{
+	return m_left->GetTableName();
+}
+
+void JoinCursor::SetTableName(std::string const& value)
+{
+	m_left->SetTableName(value);
+}

@@ -41,3 +41,13 @@ Values CursorImpl::GetAll() const {
 
 	return values;
 }
+
+std::string const& CursorImpl::GetTableName() const
+{
+	return m_tableName;
+}
+
+void CursorImpl::SetTableName(std::string const& value)
+{
+	m_tableName = value;
+}

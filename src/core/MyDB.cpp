@@ -93,7 +93,7 @@ bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const& statement)
 	if (m_tables.find(tableName) != m_tables.end())
 		throw std::runtime_error("Table with name \"" + tableName + "\" already exist.");
 
-	m_tables.emplace(tableName, Table(m_pageManager, columns));
+	m_tables.emplace(tableName, Table(m_pageManager, columns, tableName));
 
 	return true;
 }
@@ -124,7 +124,7 @@ void MyDB::LoadTables() {
 		BytesToNumber(data, tablePageID);
 		data += sizeof(PageID);
 		auto tablePage = m_pageManager->GetPage(tablePageID).lock();
-		m_tables.emplace(tableName, Table::Deserialize(*tablePage, m_pageManager));
+		m_tables.emplace(tableName, Table::Deserialize(*tablePage, m_pageManager, tableName));
 		m_pageManager->DeallocatePage(tablePage->GetID());
 	}
 }

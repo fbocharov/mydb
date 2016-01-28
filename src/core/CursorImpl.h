@@ -11,6 +11,8 @@ public:
 	virtual bool Next() override;
 	virtual Value Get(std::string const & column) const override;
 	virtual Values GetAll() const override;
+	virtual std::string const & GetTableName() const override;
+	virtual void SetTableName(std::string const& value) override;
 
 protected:
 	CursorImpl(ColumnDescriptors const & m_descriptors);
@@ -23,5 +25,6 @@ private:
 
 protected:
 	ColumnDescriptors const & m_descriptors;
+	std::string m_tableName;
 };
 #endif // CursorImpl_h

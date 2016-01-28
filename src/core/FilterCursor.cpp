@@ -32,6 +32,16 @@ void FilterCursor::MoveToBegin() {
 	m_cursor->MoveToBegin();
 }
 
+std::string const& FilterCursor::GetTableName() const
+{
+	return m_cursor->GetTableName();
+}
+
+void FilterCursor::SetTableName(std::string const& value)
+{
+	m_cursor->SetTableName(value);
+}
+
 PageID FilterCursor::GetCurrentPage() const {
 	return m_cursor->GetCurrentPage();
 }

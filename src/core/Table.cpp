@@ -4,13 +4,14 @@
 
 #include "Table.h"
 #include "FullScanCursor.h"
-#include "FilterCursor.h"
 
 using std::uint32_t;
 
-Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors)
+Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, 
+			std::string const & name)
 	: m_pageManager(manager)
 	, m_columnDescriptors(descriptors)
+	, m_name(name)
 {
 	auto firstPage = m_pageManager->AllocatePage().lock();
 	m_firstPageID = firstPage->GetID();
@@ -20,16 +21,18 @@ Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & des
 	firstPage->SetDirty();
 }
 
-Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, PageID firstPage)
+Table::Table(std::shared_ptr<PageManager> manager, ColumnDescriptors const & descriptors, 
+			PageID firstPage, std::string const & name)
 	: m_pageManager(manager)
 	, m_columnDescriptors(descriptors)
 	, m_firstPageID(firstPage)
+	, m_name(name)
 {
 	PageID lastPageID = m_pageManager->GetPage(firstPage).lock()->GetPrevPageID();
 	m_pageWithSpace = std::make_unique<DataPage>(*m_pageManager, lastPageID, m_columnDescriptors);
 }
 
-Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager) {
+Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager, std::string const & name) {
 	char const * data = page.GetData();
 
 	uint32_t fieldsCount = 0;
@@ -46,10 +49,15 @@ Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager
 	BytesToNumber(data, firstPageID);
 	data += sizeof(firstPageID);
 
-	Table table(manager, descriptors, firstPageID);
+	Table table(manager, descriptors, firstPageID, name);
 	table.DeserializeIndices(data);
 
 	return table;
+}
+
+std::string const& Table::GetName() const
+{
+	return m_name;
 }
 
 void Table::Serialize(Page & page) const {
@@ -139,12 +147,16 @@ std::unique_ptr<InternalCursor> Table::GetIndexCursor(Condition const & from, Co
 	if (!index)
 		throw std::runtime_error("Can't create index cursor: no index for column " +
 			from.GetColumn());
-	return index->GetCursor(m_columnDescriptors, from, to);
+	auto cursor = index->GetCursor(m_columnDescriptors, from, to);
+	cursor->SetTableName(m_name);
+	return std::move(cursor);
 }
 
 std::unique_ptr<InternalCursor> Table::GetFullScanCursor()
 {
-	return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
+	auto cursor = std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
+	cursor->SetTableName(m_name);
+	return std::move(cursor);
 }
 
 bool Table::HasIndex(std::string const & column) const {
