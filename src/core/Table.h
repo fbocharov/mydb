@@ -31,7 +31,8 @@ public:
 
 	bool Insert(std::vector<std::string> const & columns, Values const & values);
 	bool CreateIndex(std::string const & column, std::string const & name, IndexType type, bool isUnique);
-	std::unique_ptr<InternalCursor> GetCursorByType(CursorType type, Condition condition = Condition());
+	std::unique_ptr<InternalCursor> GetIndexCursor(Condition const & from, Condition const & to) const;
+	std::unique_ptr<InternalCursor> GetFullScanCursor();
 
 private:
 	void AddPage();

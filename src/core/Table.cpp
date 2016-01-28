@@ -4,6 +4,7 @@
 
 #include "Table.h"
 #include "FullScanCursor.h"
+#include "FilterCursor.h"
 
 using std::uint32_t;
 
@@ -130,21 +131,20 @@ bool Table::CreateIndex(std::string const & column, std::string const & name, In
 	return true;
 }
 
+std::unique_ptr<InternalCursor> Table::GetIndexCursor(Condition const & from, Condition const & to) const
+{
+	assert(from.GetColumn() == to.GetColumn());
 
-std::unique_ptr<InternalCursor> Table::GetCursorByType(CursorType type, Condition condition) {
-	switch(type) {
-		case CursorType::FULL_SCAN:
-			return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
-		case CursorType::INDEX: {
-			auto index = FindIndex(condition.GetColumn());
-			if (!index)
-				throw std::runtime_error("Can't create index cursor: no index for column " +
-										 condition.GetColumn());
-			return index->GetCursor(m_columnDescriptors, condition, condition);
-		}
-		default:
-			throw std::runtime_error("Table::GetCursorByType: unknown cursor type.");
-	}
+	auto index = FindIndex(from.GetColumn());
+	if (!index)
+		throw std::runtime_error("Can't create index cursor: no index for column " +
+			from.GetColumn());
+	return index->GetCursor(m_columnDescriptors, from, to);
+}
+
+std::unique_ptr<InternalCursor> Table::GetFullScanCursor()
+{
+	return std::make_unique<FullScanCursor>(*m_pageManager, m_firstPageID, m_columnDescriptors);
 }
 
 bool Table::HasIndex(std::string const & column) const {
@@ -173,7 +173,7 @@ ColumnDescriptor & Table::FindDescriptor(std::string const & name) {
 }
 
 void Table::FillIndex(std::string const & column, std::shared_ptr<Index> & index) {
-	auto cursor = GetCursorByType(CursorType::FULL_SCAN);
+	auto cursor = GetFullScanCursor();
 	while (cursor->Next())
 		index->Insert(cursor->Get(column), cursor->GetCurrentPage(), cursor->GetCurrentRecordNumber());
 }

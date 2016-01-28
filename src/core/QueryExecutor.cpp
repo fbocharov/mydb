@@ -55,12 +55,29 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement c
 
 std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const
 {
-	for (auto const & condition : conditions)
-		if (table.HasIndex(condition.GetColumn()))
-			return std::make_unique<FilterCursor>(table.GetCursorByType(CursorType::INDEX, condition), conditions);
+	for (auto const & condition : conditions) {
+		if (table.HasIndex(condition.GetColumn())) {
+			auto op = condition.GetOperation();
+			if (op != '=') {
+				auto inverted = op == '>' ? '<' : '>';
+				for (auto const & secondCondition : conditions)
+				{
+					if (secondCondition.GetColumn() == condition.GetColumn() 
+						&& secondCondition.GetOperation() == inverted) {
+						return op == '<'
+							? std::make_unique<FilterCursor>(table.GetIndexCursor(secondCondition, condition), conditions)
+							: std::make_unique<FilterCursor>(table.GetIndexCursor(condition, secondCondition), conditions);
+					}
+				}
+			}
+
+			return std::make_unique<FilterCursor>(table.GetIndexCursor(condition, condition));
+		}
+	}
+		
 
 	if(conditions.size() == 0)
-		return table.GetCursorByType(CursorType::FULL_SCAN);
+		return table.GetFullScanCursor();
 
-	return std::make_unique<FilterCursor>(table.GetCursorByType(CursorType::FULL_SCAN), conditions);
+	return std::make_unique<FilterCursor>(table.GetFullScanCursor(), conditions);
 }
