@@ -39,6 +39,8 @@ private:
 	void FillIndex(std::string const & column, std::shared_ptr<Index> & index);
 	std::shared_ptr<Index> FindIndex(std::string const & column) const;
 	void UpdateIndices(std::map<std::string, Value> const & colVals, PageID pageID, std::uint32_t recordNumber);
+	char *SerializeIndices(char * bytes) const;
+	void DeserializeIndices(char const * bytes);
 
 private:
 	std::shared_ptr<PageManager> m_pageManager;

@@ -77,7 +77,6 @@ std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const
 
 bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const& statement)
 {
-
 	auto const & columns = statement.GetColumns();
 	size_t headerSize = 0;
 	for (auto const & column : columns) {

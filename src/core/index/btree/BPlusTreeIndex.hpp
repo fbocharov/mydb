@@ -19,11 +19,13 @@ public:
 	BPlusTreeIndex(bool isUnique, std::shared_ptr<PageManager> manager);
 	BPlusTreeIndex(bool isUnique, std::shared_ptr<PageManager> manager, PageID rootPage);
 
-	void Serialize(char * bytes) const;
-	static std::unique_ptr<Index> Deserialize(char * bytes, bool unique, std::shared_ptr<PageManager> manager);
+	virtual char * Serialize(char * bytes) const override;
+	static std::shared_ptr<Index> Deserialize(char const ** bytes, bool unique,
+		std::shared_ptr<PageManager> & manager);
 
 	virtual bool Insert(Value const & key, PageID pageID, std::uint32_t recordNumber) override;
-	virtual std::unique_ptr<InternalCursor> GetCursor(ColumnDescriptors const & descriptors, Condition const & condition) override;
+	virtual std::unique_ptr<InternalCursor> GetCursor(ColumnDescriptors const & descriptors,
+		Condition const & condition) override;
 
 private:
 	PageID FindLeaf(PageID nodeID, Condition const & condition) const;
@@ -44,6 +46,7 @@ BPlusTreeIndex<KeyT, TreeOrder>::BPlusTreeIndex(bool isUnique, std::shared_ptr<P
 	auto page = m_pageManager->AllocatePage().lock();
 	m_rootPageID = page->GetID();
 	LeafNode<KeyT>::InitNode(page->GetData());
+	page->SetDirty();
 }
 
 template<typename KeyT, size_t TreeOrder>
@@ -54,10 +57,19 @@ BPlusTreeIndex<KeyT, TreeOrder>::BPlusTreeIndex(bool isUnique, std::shared_ptr<P
 {}
 
 template<typename KeyT, size_t TreeOrder>
-std::unique_ptr<Index> BPlusTreeIndex<KeyT, TreeOrder>::Deserialize(char * bytes, bool unique, std::shared_ptr<PageManager> manager) {
+char * BPlusTreeIndex<KeyT, TreeOrder>::Serialize(char * bytes) const {
+	NumberToBytes(m_rootPageID, bytes);
+	return bytes + sizeof(m_rootPageID);
+}
+
+template<typename KeyT, size_t TreeOrder>
+std::shared_ptr<Index> BPlusTreeIndex<KeyT, TreeOrder>::Deserialize(char const ** bytes, bool isUnique,
+		std::shared_ptr<PageManager> & manager)
+{
 	PageID rootPage;
-	BytesToNumber(bytes, rootPage);
-	return std::make_unique<BPlusTreeIndex<KeyT, TreeOrder>>(unique, manager, rootPage);
+	BytesToNumber(*bytes, rootPage);
+	*bytes += sizeof(rootPage);
+	return std::make_shared<BPlusTreeIndex<KeyT, TreeOrder>>(isUnique, manager, rootPage);
 }
 
 template<typename KeyT, size_t TreeOrder>
@@ -65,16 +77,22 @@ bool BPlusTreeIndex<KeyT, TreeOrder>::Insert(Value const & key, PageID pageID, s
 	KeyT k = key.Get<KeyT>();
 	PageID leafID = FindLeafToInsert(m_rootPageID, k);
 
-	char * bytes = m_pageManager->GetPage(leafID).lock()->GetData();
+	auto leafPage = m_pageManager->GetPage(leafID).lock();
+	char * bytes = leafPage->GetData();
 	LeafNode<KeyT> leaf(bytes);
 	leaf.Insert(k, pageID, recordNumber, m_isUnique);
+	leafPage->SetDirty();
 
-	bytes = m_pageManager->GetPage(m_rootPageID).lock()->GetData();
+	auto rootPage = m_pageManager->GetPage(m_rootPageID).lock();
+	bytes = rootPage->GetData();
 	Node node(bytes);
 	if (node.GetEntryCount() == TreeOrder) {
-		PageID newRootPage = m_pageManager->AllocatePage().lock()->GetID();
-		SplitChild(newRootPage, m_rootPageID);
-		m_rootPageID = newRootPage;
+		auto newRootPage = m_pageManager->AllocatePage().lock();
+		SplitChild(newRootPage->GetID(), m_rootPageID);
+		m_rootPageID = newRootPage->GetID();
+
+		rootPage->SetDirty();
+		newRootPage->SetDirty();
 	}
 
 	return true;
@@ -99,11 +117,6 @@ std::unique_ptr<InternalCursor> BPlusTreeIndex<KeyT, TreeOrder>::GetCursor(Colum
 
 	return std::make_unique<BPlusTreeIndexCursor<KeyT>>(
 		descriptors, *m_pageManager, condition, page->GetID(), --i);
-}
-
-template<typename KeyT, size_t TreeOrder>
-void BPlusTreeIndex<KeyT, TreeOrder>::Serialize(char * bytes) const {
-	NumberToBytes(m_rootPageID, bytes);
 }
 
 template<typename KeyT, size_t TreeOrder>
@@ -158,15 +171,20 @@ void BPlusTreeIndex<KeyT, TreeOrder>::SplitChild(PageID parentID, PageID childID
 		newNodePage->SetPrevPageID(childPage->GetID());
 		newNodePage->SetNextPageID(childPage->GetNextPageID());
 		childPage->SetNextPageID(newNodePage->GetID());
+
+		newNodePage->SetDirty();
+		childPage->SetDirty();
 	} else
 		key = InnerNode<KeyT>(childBytes).TransferHalf(newNodePage->GetData());
 
-	char * parentBytes = m_pageManager->GetPage(parentID).lock()->GetData();
+	auto parentPage = m_pageManager->GetPage(parentID).lock();
+	char * parentBytes = parentPage->GetData();
 	InnerNode<KeyT> parent(parentBytes);
 	if (0 == parent.GetEntryCount())
 		InnerNode<KeyT>::InitNode(parentBytes, key, childID, newNodePage->GetID());
 	else
 		parent.Insert(key, newNodePage->GetID());
+	parentPage->SetDirty();
 }
 
 #endif // BPlusTreeIndex_hpp

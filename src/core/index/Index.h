@@ -21,6 +21,8 @@ public:
 	Index(bool isUnique, IndexType type);
 	virtual ~Index() = default;
 
+	virtual char * Serialize(char * bytes) const = 0;
+
 	IndexType GetType() const;
 	bool IsUnique() const;
 	virtual bool Insert(Value const & key, PageID pageID, std::uint32_t recordNumber) = 0;

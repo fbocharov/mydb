@@ -43,8 +43,12 @@ Table Table::Deserialize(Page const & page, std::shared_ptr<PageManager> manager
 
 	PageID firstPageID = 0;
 	BytesToNumber(data, firstPageID);
+	data += sizeof(firstPageID);
 
-	return Table(manager, descriptors, firstPageID);
+	Table table(manager, descriptors, firstPageID);
+	table.DeserializeIndices(data);
+
+	return table;
 }
 
 void Table::Serialize(Page & page) const {
@@ -60,6 +64,8 @@ void Table::Serialize(Page & page) const {
 
 	NumberToBytes(m_firstPageID, data);
 	data += sizeof(m_firstPageID);
+
+	data = SerializeIndices(data);
 }
 
 ColumnDescriptors const & Table::GetDescription() const {
@@ -188,5 +194,85 @@ void Table::UpdateIndices(std::map<std::string, Value> const & colVals, PageID p
 			auto const & value = colVals.find(column)->second;
 			index->Insert(value, pageID, recordNumber);
 		}
+	}
+}
+
+char * Table::SerializeIndices(char * bytes) const {
+	NumberToBytes<std::uint32_t>(m_indices.size(), bytes);
+	bytes += sizeof(std::uint32_t);
+	for (auto const & columnName: m_columnIndexName) {
+		auto const & column = columnName.first;
+		auto const & indexName = columnName.second;
+
+		NumberToBytes<std::uint32_t>(column.length(), bytes);
+		bytes += sizeof(std::uint32_t);
+		memcpy(bytes, column.c_str(), column.length());
+		bytes += column.length();
+
+		NumberToBytes<std::uint32_t>(indexName.length(), bytes);
+		bytes += sizeof(std::uint32_t);
+		memcpy(bytes, indexName.c_str(), indexName.length());
+		bytes += indexName.length();
+
+		auto index = m_indices.find(indexName)->second;
+		NumberToBytes(index->GetType(), bytes);
+		bytes += sizeof(IndexType);
+
+		NumberToBytes<std::uint8_t>(index->IsUnique(), bytes);
+		bytes += sizeof(std::uint8_t);
+
+		bytes = index->Serialize(bytes);
+	}
+
+	return bytes;
+}
+
+void Table::DeserializeIndices(char const * bytes) {
+	std::uint32_t indexCount = 0;
+	BytesToNumber(bytes, indexCount);
+	bytes += sizeof(indexCount);
+
+	for (size_t i = 0; i < indexCount; ++i) {
+		std::uint32_t length;
+
+		BytesToNumber(bytes, length);
+		bytes += sizeof(length);
+		std::string column(bytes, length);
+		bytes += length;
+
+		BytesToNumber(bytes, length);
+		bytes += sizeof(length);
+		std::string indexName(bytes, length);
+		bytes += length;
+
+		IndexType type;
+		BytesToNumber(bytes, type);
+		bytes += sizeof(type);
+
+		std::uint8_t isUnique;
+		BytesToNumber(bytes, isUnique);
+		bytes += sizeof(isUnique);
+
+		std::shared_ptr<Index> index;
+		auto const & descriptor = FindDescriptor(column);
+		switch (type) {
+			case IndexType::BTREE: {
+				switch (descriptor.type) {
+					case ValueType::INT:
+						index = BPlusTreeIndex<int>::Deserialize(&bytes, isUnique, m_pageManager);
+						break;
+					case ValueType::DOUBLE:
+						index = BPlusTreeIndex<double>::Deserialize(&bytes, isUnique, m_pageManager);
+						break;
+					default:
+						throw std::runtime_error("Table::DeserializeIndex(): unsupported value type.");
+				}
+				break;
+			}
+			default:
+				throw std::runtime_error("Table::DeserializeIndex(): unknown index type.");
+		}
+		m_indices[indexName] = index;
+		m_columnIndexName[column] = indexName;
 	}
 }
