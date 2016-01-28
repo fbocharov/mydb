@@ -8,7 +8,7 @@ FilterCursor::FilterCursor(std::unique_ptr<InternalCursor> cursor, Conditions co
 bool FilterCursor::Next() {
 	while (m_cursor->Next()) {
 		auto all = true;
-		for (int i = 0; all && i < m_conditions.size(); ++i) {
+		for (size_t i = 0; all && i < m_conditions.size(); ++i) {
 			auto const & record = m_cursor->Get(m_conditions[i].GetColumn());
 			all &= m_conditions[i].Satisfies(record);
 		}
