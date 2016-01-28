@@ -145,6 +145,7 @@ COL_VECTOR  : IDENTIFIER ',' COL_VECTOR { $$ = new std::vector<std::string>(1, $
             | IDENTIFIER                { $$ = new std::vector<std::string>(1, $1); free($1); }
             ;
 S_FIELDS    : '*' { $$ = new std::vector<std::string>(); }
+            | COL_VECTOR { $$ = $1; }
             ;
 I_FIELDS    : WORD                    { $$ = new Values(1, Value{ValueType::VARCHAR, std::string($1)}); free($1); }
             | INT_NUM                 { $$ = new Values(1, Value{ValueType::INT, atoi($1)});     free($1); }

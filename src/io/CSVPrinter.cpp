@@ -1,5 +1,4 @@
 #include <sstream>
-
 #include "CSVPrinter.h"
 
 CSVPrinter::CSVPrinter(std::ostream & stream)

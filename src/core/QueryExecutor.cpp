@@ -1,5 +1,6 @@
 #include "QueryExecutor.h"
 #include "FilterCursor.h"
+#include "ProjectionCursor.h"
 
 size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const
 {
@@ -50,7 +51,12 @@ bool QueryExecutor::ExecuteInsertStatement(InsertStatement const& statement, Tab
 
 std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement const& statement, Table & table)
 {
-	return GetCursor(table, statement.GetConditions());
+	if(statement.GetFields().size() == 0)
+	{
+		return GetCursor(table, statement.GetConditions());
+	}
+
+	return std::make_unique<ProjectionCursor>(GetCursor(table, statement.GetConditions()), statement.GetFields());
 }
 
 std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const

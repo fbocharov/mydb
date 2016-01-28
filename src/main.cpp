@@ -4,7 +4,6 @@
 #include <sql/SQLParserException.h>
 #include <io/InputReader.h>
 #include <io/CSVPrinter.h>
-#include <backend/IOException.h>
 #include <core/MyDB.h>
 #include <utils/Log.h>
 
@@ -16,7 +15,21 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 	auto cursor = db.ExecuteQuery(statement);
 	auto tableDescription = db.GetTableDescription(statement->GetTableName());
 
-	printer.PrintHeading(tableDescription);
+	auto const & select = static_cast<SelectStatement const &>(*statement);
+	if (select.GetFields().size() != 0) {
+		ColumnDescriptors descriptors;
+
+		for (auto const & fieldName : select.GetFields())
+			for (auto const & desc : tableDescription)
+				if (fieldName == desc.name)
+					descriptors.push_back(desc);
+
+		printer.PrintHeading(descriptors);
+	} 
+	else {
+		printer.PrintHeading(tableDescription);
+	}
+
 	while (cursor->Next()) {
 		printer.PrintLine(cursor->GetAll());
 	}

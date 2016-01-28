@@ -5,7 +5,7 @@
 
 #include "ICursor.h"
 
-class ProjectionCursor : ICursor {
+class ProjectionCursor : public ICursor {
 public:
 	ProjectionCursor(std::unique_ptr<ICursor> cursor, std::vector<std::string> const & columns);
 	
