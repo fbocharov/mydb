@@ -11,7 +11,7 @@ FullScanCursor::FullScanCursor(PageManager & pageManager, PageID startPageID, Co
 {}
 
 void FullScanCursor::GoToNextRecord() {
-	if (m_currentPage->GetRecordCount() == m_currentRecordNumber) {
+	if (m_currentRecordNumber + 1 == m_currentPage->GetRecordCount()) {
 		PageID const nextPageID = m_currentPage->GetNextPageID();
 		if (nextPageID == INVALID_PAGE_ID)
 			return;

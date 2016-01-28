@@ -63,7 +63,7 @@ KeyT InnerNode<KeyT>::GetKey(size_t entryNumber) const {
 template<typename KeyT>
 PageID InnerNode<KeyT>::GetLEChildPage(size_t entryNumber) const {
 	size_t offset = CalculateEntryOffset(entryNumber);
-	return GetValueByOffset<KeyT>(m_bytes, offset);
+	return GetValueByOffset<PageID>(m_bytes, offset);
 }
 
 template<typename KeyT>
