@@ -55,12 +55,12 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement c
 	Conditions conditions;
 	for (auto & condition : statement.GetConditions()) {
 		auto const splited = SplitQualified(condition.GetColumn());
-		conditions.push_back(Condition(splited.second, condition.GetOperation(), condition.GetValue().Get()));
+		conditions.push_back(condition.CopyWithNewColName(splited.second));
 	}
 
 	auto plannedCursor = PlaneQuery(table, conditions);
 	auto filteredCursor = conditions.empty()
-		? move(plannedCursor)
+		? std::move(plannedCursor)
 		: std::make_unique<FilterCursor>(move(plannedCursor), conditions);
 
 	auto fields = SplitQualifiedVectorUnzip(statement.GetFields());

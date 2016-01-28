@@ -20,6 +20,8 @@ public:
 	std::string const & GetColumn() const;
 	char GetOperation() const;
 	Value const & GetValue() const;
+	
+	Condition CopyWithNewColName(std::string const & colname) const;
 
 protected:
 	std::string m_column;

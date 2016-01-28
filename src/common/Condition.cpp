@@ -15,3 +15,14 @@ char Condition::GetOperation() const {
 Value const & Condition::GetValue() const {
 	return m_value;
 }
+
+Condition Condition::CopyWithNewColName(std::string const& colname) const
+{
+	Condition newCondition;
+	newCondition.m_column = colname;
+	newCondition.m_comparator = m_comparator;
+	newCondition.m_operation = m_operation;
+	newCondition.m_value = m_value;
+
+	return newCondition;
+}

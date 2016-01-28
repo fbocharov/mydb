@@ -23,7 +23,7 @@ inline std::pair<std::string, std::string> SplitQualified(std::string const & va
 	auto dotPost = value.find('.');
 	return dotPost == value.npos
 		? std::make_pair("", value)
-		: std::make_pair(value.substr(0, dotPost), value.substr(dotPost));
+		: std::make_pair(value.substr(0, dotPost), value.substr(dotPost + 1));
 }
 
 inline std::vector<std::pair<std::string, std::string>> SplitQualifiedVector(std::vector<std::string> const & source) {

@@ -20,9 +20,9 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 	if (!fields.empty()) {
 		ColumnDescriptors descriptors;
 
-		for (auto const & field : fields)
+		for (auto const & field : SplitQualifiedVectorUnzip(fields).second)
 			for (auto const & desc : tableDescription)
-				if (field == desc.name)
+				if (field == SplitQualified(desc.name).second)
 					descriptors.push_back(desc);
 
 		printer.PrintHeading(descriptors);
