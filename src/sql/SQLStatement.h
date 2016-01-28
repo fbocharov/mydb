@@ -137,7 +137,11 @@ public:
 		, m_rightField(rightField)
 	{}
 
-	std::string const & GetRightTable() const {
+	std::string const & GetLeftTableName() const {
+		return GetTableName();
+	}
+
+	std::string const & GetRightTableName() const {
 		return m_rightTable;
 	}
 

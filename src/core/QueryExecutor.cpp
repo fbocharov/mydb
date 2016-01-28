@@ -1,6 +1,7 @@
 #include "QueryExecutor.h"
 #include "FilterCursor.h"
 #include "ProjectionCursor.h"
+#include "JoinCursor.h"
 
 size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const
 {
@@ -56,6 +57,14 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteSelectStatement(SelectStatement c
 		return GetCursor(table, statement.GetConditions());
 
 	return std::make_unique<ProjectionCursor>(GetCursor(table, statement.GetConditions()), fields);
+}
+
+std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const& statement, Table& leftTable, Table& rightTable)
+{
+	auto leftCursor  = leftTable.GetFullScanCursor();
+	auto rightCursor = rightTable.GetFullScanCursor();
+	auto joinFields = statement.GetJoinFields();
+	return std::make_unique<JoinCursor>(move(leftCursor), move(rightCursor), joinFields.first, joinFields.second);
 }
 
 std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const

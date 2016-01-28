@@ -13,7 +13,8 @@ public:
 	bool ExecuteInsertStatement(InsertStatement const & statement, Table & table) const;
 
 	std::unique_ptr<ICursor> ExecuteSelectStatement(SelectStatement const & statement, Table & table);
-
+	std::unique_ptr<ICursor> ExecuteJoinStatement(JoinStatement const & statement, 
+			Table & leftTable, Table & rightTable);
 private:
 	std::unique_ptr<InternalCursor> GetCursor(Table & table, Conditions const & conditions) const;
 };

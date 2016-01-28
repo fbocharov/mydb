@@ -67,12 +67,21 @@ size_t MyDB::ExecuteUpdate(std::unique_ptr<ISQLStatement> const & statement) {
 std::unique_ptr<ICursor> MyDB::ExecuteQuery(std::unique_ptr<ISQLStatement> const & statement) {
 	assert(statement);
 
-	if (SQLStatementType::SELECT != statement->GetType())
+	switch(statement->GetType()) {
+	case SQLStatementType::SELECT: {
+		auto const & select = static_cast<SelectStatement const &>(*statement);
+		auto & table = FindTable(select.GetTableName());
+		return m_executor.ExecuteSelectStatement(select, table);
+	}
+	case SQLStatementType::SELECT_JOIN: {
+		auto const & selectJoin = static_cast<JoinStatement const &>(*statement);
+		auto & leftTable = FindTable(selectJoin.GetLeftTableName());
+		auto & rightTable = FindTable(selectJoin.GetRightTableName());
+		return m_executor.ExecuteJoinStatement(selectJoin, leftTable, rightTable);
+	}
+	default:
 		throw std::runtime_error("Can't execute non select query.");
-
-	auto const & select = static_cast<SelectStatement const &>(*statement);
-	auto & table = FindTable(select.GetTableName());
-	return m_executor.ExecuteSelectStatement(select, table);
+	}
 }
 
 bool MyDB::ExecuteCreateTableStatement(CreateTableStatement const& statement)
