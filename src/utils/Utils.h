@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstring>
 #include <vector>
+#include <string>
 
 // Playing with fire here!
 
