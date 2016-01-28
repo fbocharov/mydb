@@ -26,7 +26,8 @@ public:
 	IndexType GetType() const;
 	bool IsUnique() const;
 	virtual bool Insert(Value const & key, PageID pageID, std::uint32_t recordNumber) = 0;
-	virtual std::unique_ptr<InternalCursor> GetCursor(ColumnDescriptors const & descriptors, Condition const & condition) = 0;
+	virtual std::unique_ptr<InternalCursor> GetCursor(ColumnDescriptors const & descriptors,
+		Condition const & from, Condition const & to) = 0;
 
 protected:
 	bool const m_isUnique;

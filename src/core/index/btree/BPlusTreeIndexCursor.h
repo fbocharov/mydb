@@ -12,7 +12,7 @@ template<typename KeyT>
 class BPlusTreeIndexCursor : public CursorImpl {
 public:
 	BPlusTreeIndexCursor(ColumnDescriptors const & descriptors, PageManager & manager,
-		Condition const & condition, PageID startPage, size_t firstRecord);
+		Condition const & from, Condition const & to, PageID startPage, size_t firstRecord);
 
 	virtual PageID GetCurrentPage() const override;
 	virtual std::uint32_t GetCurrentRecordNumber() const override;
@@ -29,7 +29,8 @@ private:
 
 private:
 	PageManager & m_pageManager;
-	Condition m_condition;
+	Condition m_from;
+	Condition m_to;
 	PageID m_currentPage;
 	size_t m_currentEntry;
 
@@ -40,10 +41,11 @@ private:
 
 template<typename KeyT>
 BPlusTreeIndexCursor<KeyT>::BPlusTreeIndexCursor(ColumnDescriptors const & descriptors, PageManager & manager,
-		Condition const & condition, PageID startPage, size_t startEntry)
+		Condition const & from, Condition const & to, PageID startPage, size_t startEntry)
 	: CursorImpl(descriptors)
 	, m_pageManager(manager)
-	, m_condition(condition)
+	, m_from(from)
+	, m_to(to)
 	, m_currentPage(startPage)
 	, m_currentEntry(startEntry)
 	, m_startPage(startPage)
@@ -89,9 +91,9 @@ bool BPlusTreeIndexCursor<KeyT>::HasNext() const {
 			INVALID_PAGE_ID == m_pageManager.GetPage(m_currentEntry).lock()->GetNextPageID())
 		return false;
 
-	KeyT key = leaf.GetKey(m_currentEntry + 1);
+	Value value(ValueType::UNKNOWN, leaf.GetKey(m_currentEntry + 1));
 
-	return m_condition.Satisfies(Value(ValueType::UNKNOWN, key));
+	return m_from.Satisfies(value) && m_to.Satisfies(value);
 }
 
 template<typename KeyT>

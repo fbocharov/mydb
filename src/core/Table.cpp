@@ -140,7 +140,7 @@ std::unique_ptr<InternalCursor> Table::GetCursorByType(CursorType type, Conditio
 			if (!index)
 				throw std::runtime_error("Can't create index cursor: no index for column " +
 										 condition.GetColumn());
-			return index->GetCursor(m_columnDescriptors, condition);
+			return index->GetCursor(m_columnDescriptors, condition, condition);
 		}
 		default:
 			throw std::runtime_error("Table::GetCursorByType: unknown cursor type.");

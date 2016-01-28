@@ -25,7 +25,7 @@ public:
 
 	virtual bool Insert(Value const & key, PageID pageID, std::uint32_t recordNumber) override;
 	virtual std::unique_ptr<InternalCursor> GetCursor(ColumnDescriptors const & descriptors,
-		Condition const & condition) override;
+		Condition const & from, Condition const & to) override;
 
 private:
 	PageID FindLeaf(PageID nodeID, Condition const & condition) const;
@@ -100,23 +100,23 @@ bool BPlusTreeIndex<KeyT, TreeOrder>::Insert(Value const & key, PageID pageID, s
 
 template<typename KeyT, size_t TreeOrder>
 std::unique_ptr<InternalCursor> BPlusTreeIndex<KeyT, TreeOrder>::GetCursor(ColumnDescriptors const & descriptors,
-		Condition const & condition)
+		Condition const & from, Condition const & to)
 {
-	auto leafID = FindLeaf(m_rootPageID, condition);
+	auto leafID = FindLeaf(m_rootPageID, from);
 	auto page = m_pageManager->GetPage(leafID).lock();
 	LeafNode<KeyT> leaf(page->GetData());
 
 	size_t i = 0;
-	if (condition.GetOperation() != '<') {
+	if (from.GetOperation() != '<') {
 		for (; i < leaf.GetEntryCount(); ++i) {
 			KeyT key = leaf.GetKey(i);
-			if (condition.Satisfies(Value(ValueType::UNKNOWN, key)))
+			if (from.Satisfies(Value(ValueType::UNKNOWN, key)))
 				break;
 		}
 	}
 
 	return std::make_unique<BPlusTreeIndexCursor<KeyT>>(
-		descriptors, *m_pageManager, condition, page->GetID(), --i);
+		descriptors, *m_pageManager, from, to, page->GetID(), --i);
 }
 
 template<typename KeyT, size_t TreeOrder>
