@@ -33,6 +33,7 @@ int yylex(void);
 "index"           return INDEX;
 "unique"          return UNIQUE;
 "on"              return ON;
+"join"            return JOIN;
 "using"           return USING;
 "btree"           return BTREE;
 "="               { return EQ; }
@@ -50,8 +51,11 @@ int yylex(void);
 "quit"            return EXIT;
 [0-9]+            { yylval.string_v = strdup(yytext); return INT_NUM;    }
 [0-9]+\.[0-9]+    { yylval.string_v = strdup(yytext); return DOUBLE_NUM; }
-\"[ \ta-z0-9]*\"  { yylval.string_v = strdup(yytext); return WORD;       }
+\"[ \ta-z0-9[:punct:]]*\"  { yylval.string_v = strdup(yytext); return WORD;       }
 [a-z]+[a-z0-9_]*  { yylval.string_v = strdup(yytext); return IDENTIFIER; }
+
+[a-z]+[a-z0-9_]*\.[a-z]+[a-z0-9_]*  { yylval.string_v = strdup(yytext); return FULL_QUAL_NAME; }
+
 [ \t]             {}
 \r                {}
 .                 { yyerror("Unknown Character"); return UNKNOWN_TOKEN; }

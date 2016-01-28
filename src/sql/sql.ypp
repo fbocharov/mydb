@@ -38,6 +38,7 @@ extern ISQLStatement * parsedStatement;
 %token INDEX
 %token UNIQUE
 %token ON
+%token JOIN
 %token USING
 %token BTREE
 %token INT
@@ -50,6 +51,7 @@ extern ISQLStatement * parsedStatement;
 %token <string_v> DOUBLE_NUM
 %token <string_v> WORD
 %token <string_v> IDENTIFIER
+%token <string_v> FULL_QUAL_NAME
 %token UNKNOWN_TOKEN
 
 %union{
@@ -66,6 +68,7 @@ extern ISQLStatement * parsedStatement;
     InsertStatement * insert_statement;
     UpdateStatement * update_statement;
     DeleteStatement * delete_statement;
+    JoinStatement * join_statement;
     ISQLStatement   * statement;
 }
 
@@ -73,6 +76,7 @@ extern ISQLStatement * parsedStatement;
 %type <cond_vector> COND_VECTOR
 %type <s_vector> COL_VECTOR
 %type <s_vector> S_FIELDS
+%type <s_vector> FQN_VECTOR
 %type <values_vector> I_FIELDS
 %type <update_values> U_FLD_VALS
 %type <select_statement> SELECT_S
@@ -81,6 +85,7 @@ extern ISQLStatement * parsedStatement;
 %type <insert_statement> INSERT_S
 %type <update_statement> UPDATE_S
 %type <delete_statement> DELETE_S
+%type <join_statement> JOIN_S
 %type <nulltype> EXIT_S
 %type <statement> STATEMENT
 
@@ -95,6 +100,7 @@ extern ISQLStatement * parsedStatement;
 %destructor { delete $$; } <insert_statement>
 %destructor { delete $$; } <update_statement>
 %destructor { delete $$; } <delete_statement>
+%destructor { delete $$; } <join_statement>
 
 
 %start STATEMENT
@@ -118,18 +124,39 @@ COND_VECTOR : IDENTIFIER EQ INT_NUM    { $$ = new std::vector<Condition>(1, Cond
                                          free($1); free($3); }
             | IDENTIFIER EQ WORD       { $$ = new std::vector<Condition>(1, Condition($1, '=', std::string($3))); 
                                          free($1); free($3); }
+            | FULL_QUAL_NAME EQ INT_NUM    { $$ = new std::vector<Condition>(1, Condition($1, '=', atoi($3)));
+                                             free($1); free($3); }
+            | FULL_QUAL_NAME EQ DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, '=', atof($3))); 
+                                             free($1); free($3); }
+            | FULL_QUAL_NAME EQ WORD       { $$ = new std::vector<Condition>(1, Condition($1, '=', std::string($3))); 
+                                             free($1); free($3); }
+
             | IDENTIFIER OP INT_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, atoi($3))); 
                                          free($1); free($2); free($3); }
             | IDENTIFIER OP DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, atof($3))); 
                                          free($1); free($2); free($3); }
             | IDENTIFIER OP WORD       { $$ = new std::vector<Condition>(1, Condition($1, *$2, std::string($3))); 
                                          free($1); free($2); free($3); }
+            | FULL_QUAL_NAME OP INT_NUM    { $$ = new std::vector<Condition>(1, Condition($1, *$2, atoi($3))); 
+                                             free($1); free($2); free($3); }
+            | FULL_QUAL_NAME OP DOUBLE_NUM { $$ = new std::vector<Condition>(1, Condition($1, *$2, atof($3))); 
+                                             free($1); free($2); free($3); }
+            | FULL_QUAL_NAME OP WORD       { $$ = new std::vector<Condition>(1, Condition($1, *$2, std::string($3))); 
+                                             free($1); free($2); free($3); }
+
             | IDENTIFIER EQ INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, '=', atoi($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); delete $5; }
             | IDENTIFIER EQ DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, '=', atof($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); delete $5; }
             | IDENTIFIER EQ WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, '=', std::string($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); delete $5; }
+            | FULL_QUAL_NAME EQ INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, '=', atoi($3))); 
+                                                             $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); delete $5; }
+            | FULL_QUAL_NAME EQ DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, '=', atof($3))); 
+                                                             $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); delete $5; }
+            | FULL_QUAL_NAME EQ WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, '=', std::string($3))); 
+                                                             $$->insert($$->end(), $5->begin(), $5->end()); free($1); free($3); delete $5; }
+
             | IDENTIFIER OP INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, *$2, atoi($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); 
                                                          free($1); free($2); free($3); delete $5; }
@@ -139,13 +166,29 @@ COND_VECTOR : IDENTIFIER EQ INT_NUM    { $$ = new std::vector<Condition>(1, Cond
             | IDENTIFIER OP WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, *$2, std::string($3))); 
                                                          $$->insert($$->end(), $5->begin(), $5->end()); 
                                                          free($1); free($2); free($3); delete $5; }
+            | FULL_QUAL_NAME OP INT_NUM AND COND_VECTOR    { $$ = new std::vector<Condition>(1, Condition($1, *$2, atoi($3))); 
+                                                             $$->insert($$->end(), $5->begin(), $5->end()); 
+                                                             free($1); free($2); free($3); delete $5; }
+            | FULL_QUAL_NAME OP DOUBLE_NUM AND COND_VECTOR { $$ = new std::vector<Condition>(1, Condition($1, *$2, atof($3))); 
+                                                             $$->insert($$->end(), $5->begin(), $5->end()); 
+                                                             free($1); free($2); free($3); delete $5; }
+            | FULL_QUAL_NAME OP WORD AND COND_VECTOR       { $$ = new std::vector<Condition>(1, Condition($1, *$2, std::string($3))); 
+                                                             $$->insert($$->end(), $5->begin(), $5->end()); 
+                                                             free($1); free($2); free($3); delete $5; }
             ;
 COL_VECTOR  : IDENTIFIER ',' COL_VECTOR { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end()); 
                                           free($1); delete $3; }
             | IDENTIFIER                { $$ = new std::vector<std::string>(1, $1); free($1); }
             ;
-S_FIELDS    : '*' { $$ = new std::vector<std::string>(); }
-            | COL_VECTOR { $$ = $1; }
+FQN_VECTOR  : FULL_QUAL_NAME                 { $$ = new std::vector<std::string>(1, $1); free($1); }
+            | IDENTIFIER                     { $$ = new std::vector<std::string>(1, $1); free($1); }
+            | FULL_QUAL_NAME ',' FQN_VECTOR  { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end());
+                                               free($1); delete $3; }
+            | IDENTIFIER ',' FQN_VECTOR      { $$ = new std::vector<std::string>(1, $1); $$->insert($$->end(), $3->begin(), $3->end());
+                                               free($1); delete $3; }
+            ;
+S_FIELDS    : '*'        { $$ = new std::vector<std::string>(); }
+            | FQN_VECTOR { $$ = $1; }
             ;
 I_FIELDS    : WORD                    { $$ = new Values(1, Value{ValueType::VARCHAR, std::string($1)}); free($1); }
             | INT_NUM                 { $$ = new Values(1, Value{ValueType::INT, atoi($1)});     free($1); }
@@ -189,6 +232,19 @@ DELETE_S    : DELETE FROM IDENTIFIER WHERE COND_VECTOR { $$ = new DeleteStatemen
 SELECT_S    : SELECT S_FIELDS FROM IDENTIFIER { $$ = new SelectStatement($4, *$2); delete $2; free($4); }
             | SELECT S_FIELDS FROM IDENTIFIER WHERE COND_VECTOR { $$ = new SelectStatement($4, *$2, *$6); delete $2; delete $6; free($4); }
             ;
+JOIN_S      : SELECT S_FIELDS FROM IDENTIFIER JOIN IDENTIFIER ON FULL_QUAL_NAME EQ FULL_QUAL_NAME { 
+                    $$ = new JoinStatement($4, $6, *$2, $8, $10);
+                    free($4); free($6); free($8); free($10); delete $2; }
+            | SELECT S_FIELDS FROM IDENTIFIER JOIN IDENTIFIER ON FULL_QUAL_NAME EQ FULL_QUAL_NAME WHERE COND_VECTOR { 
+                    $$ = new JoinStatement($4, $6, *$2, $8, $10, *$12);
+                    free($4); free($6); free($8); free($10); delete $2; delete $12; }
+            | SELECT S_FIELDS FROM IDENTIFIER JOIN IDENTIFIER ON IDENTIFIER EQ IDENTIFIER { 
+                    $$ = new JoinStatement($4, $6, *$2, $8, $10);
+                    free($4); free($6); free($8); free($10); delete $2; }
+            | SELECT S_FIELDS FROM IDENTIFIER JOIN IDENTIFIER ON IDENTIFIER EQ IDENTIFIER WHERE COND_VECTOR { 
+                    $$ = new JoinStatement($4, $6, *$2, $8, $10, *$12);
+                    free($4); free($6); free($8); free($10); delete $2; delete $12; }
+            ;
 EXIT_S      : EXIT { $$ = nullptr; }
             ;
 STATEMENT   : SELECT_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
@@ -197,6 +253,7 @@ STATEMENT   : SELECT_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | CREATE_I_S ';' { parsedStatement = $1; $$ = parsedStatement; }
             | UPDATE_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | DELETE_S ';'   { parsedStatement = $1; $$ = parsedStatement; }
+            | JOIN_S   ';'   { parsedStatement = $1; $$ = parsedStatement; }
             | EXIT_S         { parsedStatement = $1; $$ = parsedStatement; }
             ;
 %%
