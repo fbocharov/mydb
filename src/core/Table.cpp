@@ -81,6 +81,14 @@ ColumnDescriptors const & Table::GetDescription() const {
 	return m_columnDescriptors;
 }
 
+bool Table::HasDescriptor(std::string const& columnName) const {
+	for (auto & d : m_columnDescriptors)
+		if (columnName == d.name)
+			return true;
+
+	return false;
+}
+
 bool Table::Insert(std::vector<std::string> const & columns, Values const & values) {
 	if (columns.size() != values.size() && m_columnDescriptors.size() != values.size()) {
 		Log(LogType::Error) << "Trying to insert " << values.size() << " values"

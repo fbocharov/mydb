@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstring>
 #include <vector>
+#include <algorithm>
 #include <string>
 
 // Playing with fire here!
@@ -46,6 +47,11 @@ inline std::pair<std::vector<std::string>, std::vector<std::string>> SplitQualif
 	}
 
 	return result;
+}
+
+template<typename T>
+bool Contains(std::vector<T> vector, T value) {
+	return std::find(vector.begin(), vector.end(), value) != vector.end();
 }
 
 template<typename T>
