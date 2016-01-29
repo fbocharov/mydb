@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "QueryExecutor.h"
 #include "FilterCursor.h"
 #include "ProjectionCursor.h"
@@ -5,14 +7,29 @@
 
 size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const
 {
+
 	auto const & conditions = statement.GetConditions();
-	auto plannedCursor = PlaneQuery(table, conditions);
-	auto cursor = conditions.empty()
-		? std::move(plannedCursor)
-		: std::make_unique<FilterCursor>(std::move(plannedCursor), conditions);
+	auto cursor = std::make_unique<FilterCursor>(table.GetFullScanCursor(), conditions);
 
 	auto const & updated = statement.GetColVals();
 	auto const & descs = table.GetDescription();
+	for (auto const & cond: conditions) {
+		auto column = cond.GetColumn();
+		if (!table.HasIndex(column))
+			continue;
+
+		auto it = std::find_if(updated.begin(), updated.end(),
+			[column] (std::pair<std::string, Value> const & p) {
+				return column == p.first;
+			}
+		);
+		if (updated.end() == it) {
+			// Table has index on this column and this column is not updated -> better use index cursor.
+			auto internalCursor = GetIndexCursor(table, conditions, cond);
+			cursor = std::make_unique<FilterCursor>(std::move(internalCursor), conditions);
+			break;
+		}
+	}
 	std::vector<std::string> colNames;
 
 	// TODO: move column names receiving to public interface of Table class
@@ -31,8 +48,8 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 			}
 		}
 
-		table.Insert(colNames, values);
 		cursor->Delete();
+		table.Insert(colNames, values);
 		++updatedCount;
 	}
 
@@ -186,25 +203,28 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const
 
 std::unique_ptr<InternalCursor> QueryExecutor::PlaneQuery(Table& table, Conditions const& conditions) const
 {
-	for (auto const & condition : conditions) {
-		if (table.HasIndex(condition.GetColumn())) {
-			auto op = condition.GetOperation();
-			if (op != '=') {
-				auto inverted = op == '>' ? '<' : '>';
-				for (auto const & secondCondition : conditions) {
-					if (secondCondition.GetColumn() == condition.GetColumn()
-						&& secondCondition.GetOperation() == inverted) {
-						return op == '<'
-							? table.GetIndexCursor(secondCondition, condition)
-							: table.GetIndexCursor(condition, secondCondition);
-					}
-				}
-			}
-
-			return table.GetIndexCursor(condition, condition);
-		}
-	}
-		
+	for (auto const & condition : conditions)
+		if (table.HasIndex(condition.GetColumn()))
+			return GetIndexCursor(table, conditions, condition);
 
 	return table.GetFullScanCursor();
 }
+
+std::unique_ptr<InternalCursor> QueryExecutor::GetIndexCursor(Table const & table,
+		Conditions const & conditions, Condition const & first) const
+{
+	auto op = first.GetOperation();
+	if (op != '=') {
+		auto inverted = op == '>' ? '<' : '>';
+		for (auto const & secondCondition : conditions) {
+			if (secondCondition.GetColumn() == first.GetColumn()
+				&& secondCondition.GetOperation() == inverted) {
+				return op == '<'
+					? table.GetIndexCursor(secondCondition, first)
+					: table.GetIndexCursor(first, secondCondition);
+			}
+		}
+	}
+	return table.GetIndexCursor(first, first);
+}
+

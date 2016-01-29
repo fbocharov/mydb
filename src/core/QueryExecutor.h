@@ -15,9 +15,11 @@ public:
 	std::unique_ptr<ICursor> ExecuteSelectStatement(SelectStatement const & statement, Table & table);
 	std::unique_ptr<ICursor> ExecuteJoinStatement(JoinStatement const & statement, 
 			Table & leftTable, Table & rightTable);
+
 private:
 	std::unique_ptr<InternalCursor> PlaneQuery(Table & table, Conditions const & conditions) const;
 	std::unique_ptr<InternalCursor> GetCursor(Table & table, Conditions const & conditions) const;
+	std::unique_ptr<InternalCursor> GetIndexCursor(const Table &table, Conditions const & conditions, Condition const & first) const;
 };
 
 #endif // QueryExecutor_h

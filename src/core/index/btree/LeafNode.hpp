@@ -87,8 +87,26 @@ void LeafNode<KeyT>::Insert(KeyT key, PageID pageID, uint32_t recordNumber, bool
 	char * bytes = m_bytes + CalculateEntryOffset(0);
 	for (; i < keyCount; ++i) {
 		KeyT currentKey = GetValueByOffset<KeyT>(bytes, 0);
-		if (currentKey == key && unique)
-			throw std::runtime_error("Record with value " + std::to_string(key) + " already exist.");
+		if (currentKey == key) {
+			bool deleted = GetValueByOffset<std::uint8_t>(bytes, sizeof(KeyT));
+
+			if (unique && !deleted)
+				throw std::runtime_error("Record with value " + std::to_string(key) + " already exist.");
+
+			if (deleted) { // if there is entry with eq deleted key -> can insert right here
+				bytes += sizeof(KeyT);
+
+				NumberToBytes<std::uint8_t>(0, bytes);
+				bytes += sizeof(std::uint8_t);
+
+				NumberToBytes(pageID, bytes);
+				bytes += sizeof(PageID);
+
+				NumberToBytes(recordNumber, bytes);
+				return;
+			}
+		}
+
 		if (currentKey > key)
 			break;
 		bytes += m_entrySize;
@@ -96,16 +114,16 @@ void LeafNode<KeyT>::Insert(KeyT key, PageID pageID, uint32_t recordNumber, bool
 
 	memmove(bytes + m_entrySize, bytes, (keyCount - i) * m_entrySize);
 
-	NumberToBytes(key, bytes);
+	NumberToBytes<KeyT>(key, bytes);
 	bytes += sizeof(key);
 
 	NumberToBytes<std::uint8_t>(0, bytes);
 	bytes += sizeof(std::uint8_t);
 
-	NumberToBytes(pageID, bytes);
+	NumberToBytes<PageID>(pageID, bytes);
 	bytes += sizeof(PageID);
 
-	NumberToBytes(recordNumber, bytes);
+	NumberToBytes<std::uint32_t>(recordNumber, bytes);
 
 	Node::InitNode(m_bytes, NodeType::LEAF_NODE, ++keyCount);
 }

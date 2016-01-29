@@ -57,8 +57,5 @@ std::string Value::ToString() const {
 }
 
 bool operator==(Value const& left, Value const& right){
-	if (left.GetSize() != right.GetSize())
-		return false;
-
-	return strncmp(left.GetBytes(), right.GetBytes(), left.GetSize()) == 0;
+	return left.ToString() == right.ToString();
 }

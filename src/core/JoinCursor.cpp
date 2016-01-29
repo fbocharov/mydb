@@ -9,7 +9,7 @@ JoinCursor::JoinCursor(std::unique_ptr<ICursor> left, std::unique_ptr<ICursor> r
 	, m_right_field(right_field)
 	, m_fields(fields)
 {
-	m_right->Next();
+	m_left->Next();
 }
 
 bool JoinCursor::Next() {
@@ -24,7 +24,6 @@ bool JoinCursor::Next() {
 		if (!m_left->Next())
 			break;
 		m_right->MoveToBegin();
-		m_right->Next();
 	}
 	
 	return false;

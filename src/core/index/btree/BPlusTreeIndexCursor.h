@@ -91,8 +91,14 @@ bool BPlusTreeIndexCursor<KeyT>::HasNext() const {
 		Value value(ValueType::UNKNOWN, leaf.GetKey(m_currentEntry + 1));
 		return m_from.Satisfies(value) && m_to.Satisfies(value);
 	}
+	auto nextPageID = m_pageManager.GetPage(m_currentPage).lock()->GetNextPageID();
+	if (INVALID_PAGE_ID == nextPageID)
+		return false;
 
-	return INVALID_PAGE_ID != m_pageManager.GetPage(m_currentPage).lock()->GetNextPageID();
+	auto nextPage = m_pageManager.GetPage(nextPageID).lock();
+	Value value(ValueType::UNKNOWN, LeafNode<KeyT>(nextPage->GetData()).GetKey(0));
+
+	return m_from.Satisfies(value) && m_to.Satisfies(value);
 }
 
 template<typename KeyT>
@@ -100,6 +106,9 @@ char const * BPlusTreeIndexCursor<KeyT>::GetCurrentRecord() const {
 	LeafNode<KeyT> leaf(GetPageBytes());
 	PageID recordPage = leaf.GetRecordPage(m_currentEntry);
 	size_t recordNumber = leaf.GetRecordNumber(m_currentEntry);
+
+	if (recordNumber > 1000)
+		std::cout << "FIRE: " << leaf.GetKey(m_currentEntry) << std::endl;
 
 	DataPage page(m_pageManager, recordPage, m_descriptors);
 	if (page.RecordIsDeleted(recordNumber))
@@ -109,6 +118,9 @@ char const * BPlusTreeIndexCursor<KeyT>::GetCurrentRecord() const {
 
 template<typename KeyT>
 void BPlusTreeIndexCursor<KeyT>::GoToNextRecord() {
+	if (!HasNext())
+		return;
+
 	LeafNode<KeyT> leaf(GetPageBytes());
 	if (m_currentEntry + 1 == leaf.GetEntryCount()) {
 		m_currentPage = m_pageManager.GetPage(m_currentPage).lock()->GetNextPageID();
