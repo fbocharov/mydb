@@ -33,6 +33,44 @@ void ExecuteSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, 
 		printer.PrintLine(cursor->GetAll());
 }
 
+void ExecuteJoinSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, CSVPrinter & printer) {
+	auto cursor = db.ExecuteQuery(statement);
+
+	auto const & joinSelect = static_cast<JoinStatement const &>(*statement);
+	auto fields = joinSelect.GetFields();
+	auto const & leftTableDescription = db.GetTableDescription(joinSelect.GetLeftTableName());
+	auto const & rightTableDescription = db.GetTableDescription(joinSelect.GetRightTableName());
+
+	if(!fields.empty()) {
+		ColumnDescriptors descriptors;
+		for (auto const & splitted : SplitQualifiedVector(fields)) {
+			if (splitted.first == joinSelect.GetLeftTableName()) {
+				for (auto const & desc : leftTableDescription)
+					if (splitted.second == SplitQualified(desc.name).second)
+						descriptors.push_back(desc);
+			}
+			else {
+				for (auto const & desc : rightTableDescription)
+					if (splitted.second == SplitQualified(desc.name).second)
+						descriptors.push_back(desc);
+			}
+		}
+		printer.PrintHeading(descriptors);
+	}
+	else {
+		ColumnDescriptors descs;
+		for (auto const & desc : leftTableDescription)
+			descs.push_back(desc);
+
+		for (auto const & desc : rightTableDescription)
+			descs.push_back(desc);
+		printer.PrintHeading(descs);
+	}
+
+	while (cursor->Next())
+		printer.PrintLine(cursor->GetAll());
+}
+
 void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statement, CSVPrinter & printer) {
 	switch (statement->GetType()) {
 		case SQLStatementType::CREATE_TABLE:
@@ -48,7 +86,10 @@ void ExecuteStatement(MyDB & db, std::unique_ptr<ISQLStatement> const & statemen
 			std::cout << "OK " << rows << std::endl;
 			break;
 		}
-		case SQLStatementType::SELECT_JOIN:
+		case SQLStatementType::SELECT_JOIN: {
+			ExecuteJoinSelect(db, statement, printer);
+			break;
+		}
 		case SQLStatementType::SELECT: {
 			ExecuteSelect(db, statement, printer);
 			break;

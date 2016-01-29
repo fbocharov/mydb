@@ -6,7 +6,8 @@
 class JoinCursor : public ICursor {
 public:
 	JoinCursor(std::unique_ptr<ICursor> left, std::unique_ptr<ICursor> right, 
-		std::string const & left_field, std::string const & right_field);
+		std::string const & left_field, std::string const & right_field, 
+		std::vector<std::pair<int, std::string>> const & fields);
 
 	virtual bool Next() override;
 	virtual Value Get(std::string const & column) const override;
@@ -22,5 +23,7 @@ private:
 	
 	std::string m_left_field;
 	std::string m_right_field;
+
+	std::vector<std::pair<int, std::string>> m_fields;
 };
 #endif // JoinCursor_h

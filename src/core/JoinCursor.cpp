@@ -1,10 +1,13 @@
 #include "JoinCursor.h"
 
-JoinCursor::JoinCursor(std::unique_ptr<ICursor> left, std::unique_ptr<ICursor> right, std::string const& left_field, std::string const& right_field)
+JoinCursor::JoinCursor(std::unique_ptr<ICursor> left, std::unique_ptr<ICursor> right, 
+		std::string const& left_field, std::string const& right_field,
+		std::vector<std::pair<int, std::string>> const & fields)
 	: m_left(move(left))
 	, m_right(move(right))
 	, m_left_field(left_field)
 	, m_right_field(right_field)
+	, m_fields(fields)
 {
 	m_right->Next();
 	m_left->Next();
@@ -39,9 +42,21 @@ Value JoinCursor::Get(std::string const& column) const {
 }
 
 Values JoinCursor::GetAll() const {
-	auto result = m_left->GetAll();
-	for (auto const & rvalue : m_right->GetAll())
-		result.push_back(rvalue);
+	Values result;
+	if(m_fields.empty()) {
+		for (auto const & v : m_left->GetAll())
+			result.push_back(v);
+		for (auto const & v : m_right->GetAll())
+			result.push_back(v);
+	}
+	else {
+		for (auto const & field : m_fields) {
+			if (field.first == 1)
+				result.push_back(m_left->Get(field.second));
+			else
+				result.push_back(m_right->Get(field.second));
+		}
+	}
 
 	return result;
 }

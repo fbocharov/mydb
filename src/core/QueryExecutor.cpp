@@ -99,8 +99,7 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const
 			rightConditions.push_back(condition.CopyWithNewColName(splitted.second));
 	}
 
-	std::vector<std::string> leftFields;
-	std::vector<std::string> rifghtFields;
+	std::vector<std::pair<int, std::string>> joinFields;
 	auto splitted = SplitQualifiedVectorUnzip(statement.GetFields());
 	for (size_t i = 0; i < splitted.first.size(); ++i) {
 		auto const & tableName = splitted.first[i];
@@ -119,9 +118,9 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const
 		}
 
 		if (inLeft)
-			leftFields.push_back(columnName);
+			joinFields.push_back(std::make_pair(1, columnName));
 		else
-			rifghtFields.push_back(columnName);
+			joinFields.push_back(std::make_pair(2, columnName));
 	}
 
 	auto leftPlannedCursor = PlaneQuery(leftTable, leftConditions);
@@ -135,21 +134,46 @@ std::unique_ptr<ICursor> QueryExecutor::ExecuteJoinStatement(JoinStatement const
 		? std::move(rightPlannedCursor)
 		: std::make_unique<FilterCursor>(std::move(rightPlannedCursor), rightConditions);
 
-	auto leftProjectionCursor = leftFields.empty()
-		? std::move(leftFilteredCursor)
-		: std::make_unique<ProjectionCursor>(std::move(leftFilteredCursor), leftFields);
+	auto const & joinOn = statement.GetJoinFields();
+	auto const firstSplitted = SplitQualified(joinOn.first);
+	auto const secondSplitted = SplitQualified(joinOn.second);
 
-	auto rightProjectionCursor = rifghtFields.empty()
-		? std::move(rightFilteredCursor)
-		: std::make_unique<ProjectionCursor>(std::move(rightFilteredCursor), rifghtFields);
+	bool firstInLeft, firstInRight;
+	firstInLeft = firstInRight = false;
 
-	inLeft = inRight = false;
-	
-	auto const & joinFields = statement.GetJoinFields();
-	auto const firstSplitted = SplitQualified(joinFields.first);
-	auto const secondSplitted = SplitQualified(joinFields.second);
+	if (firstSplitted.first == "" || firstSplitted.first == leftName)
+		firstInLeft = leftTable.HasDescriptor(firstSplitted.second);
+	if (firstSplitted.first == "" || firstSplitted.first == rightName)
+		firstInRight = rightTable.HasDescriptor(firstSplitted.second);
+	if(firstInLeft == firstInRight) {
+		auto msg = firstInLeft == true
+			? "Ambigious on predicate \"" + firstSplitted.second + "\""
+			: "Cannot resolve on predicate \"" + firstSplitted.first + (firstSplitted.first == "" ? "" : ".") + firstSplitted.second + "\"";
+		throw std::runtime_error(msg);
+	}
 
-	return std::make_unique<JoinCursor>(move(leftProjectionCursor), move(rightProjectionCursor), firstSplitted.second, secondSplitted.second);
+	bool secondInLeft, secondInRight;
+	secondInLeft = secondInRight = false;
+
+	if (secondSplitted.first == "" || secondSplitted.first == leftName)
+		secondInLeft = leftTable.HasDescriptor(secondSplitted.second);
+	if (secondSplitted.first == "" || secondSplitted.first == rightName)
+		secondInRight = rightTable.HasDescriptor(secondSplitted.second);
+
+	if (secondInLeft == secondInRight) {
+		auto msg = secondInRight == true
+			? "Ambigious on predicate \"" + secondSplitted.second + "\""
+			: "Cannot resolve on predicate \"" + secondSplitted.first + (secondSplitted.first == "" ? "" : ".") + secondSplitted.second + "\"";
+		throw std::runtime_error(msg);
+	}
+
+	if (firstInLeft == secondInLeft)
+		throw std::runtime_error("Wrong on preadicate in join statement. Use field from different tables.");
+
+	if(firstInLeft)
+		return std::make_unique<JoinCursor>(move(leftFilteredCursor), move(rightFilteredCursor), firstSplitted.second, secondSplitted.second, joinFields);
+	else
+		return std::make_unique<JoinCursor>(move(leftFilteredCursor), move(rightFilteredCursor), secondSplitted.second, firstSplitted.second, joinFields);
 }
 
 std::unique_ptr<InternalCursor> QueryExecutor::PlaneQuery(Table& table, Conditions const& conditions) const
