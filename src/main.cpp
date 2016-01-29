@@ -44,7 +44,19 @@ void ExecuteJoinSelect(MyDB & db, std::unique_ptr<ISQLStatement> const & stateme
 	if(!fields.empty()) {
 		ColumnDescriptors descriptors;
 		for (auto const & splitted : SplitQualifiedVector(fields)) {
-			if (splitted.first == joinSelect.GetLeftTableName()) {
+			if (splitted.first == "") {
+				bool found = false;
+				for (auto const & desc : leftTableDescription)
+					if (splitted.second == SplitQualified(desc.name).second) {
+						descriptors.push_back(desc);
+						found = true;
+					}
+				if (!found)
+					for (auto const & desc : rightTableDescription)
+						if (splitted.second == SplitQualified(desc.name).second)
+							descriptors.push_back(desc);
+			}
+			else if (splitted.first == joinSelect.GetLeftTableName()) {
 				for (auto const & desc : leftTableDescription)
 					if (splitted.second == SplitQualified(desc.name).second)
 						descriptors.push_back(desc);
