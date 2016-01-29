@@ -5,7 +5,11 @@
 
 size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, Table & table) const
 {
-	auto cursor = GetCursor(table, statement.GetConditions());
+	auto const & conditions = statement.GetConditions();
+	auto plannedCursor = PlaneQuery(table, conditions);
+	auto cursor = conditions.empty()
+		? std::move(plannedCursor)
+		: std::make_unique<FilterCursor>(std::move(plannedCursor), conditions);
 
 	auto const & updated = statement.GetColVals();
 	auto const & descs = table.GetDescription();
@@ -37,7 +41,11 @@ size_t QueryExecutor::ExecuteUpdateStatement(UpdateStatement const & statement, 
 
 size_t QueryExecutor::ExecuteDeleteStatement(DeleteStatement const& statement, Table & table) const
 {
-	auto cursor = GetCursor(table, statement.GetConditions());
+	auto const & conditions = statement.GetConditions();
+	auto plannedCursor = PlaneQuery(table, conditions);
+	auto cursor = conditions.empty()
+		? std::move(plannedCursor)
+		: std::make_unique<FilterCursor>(std::move(plannedCursor), conditions);
 	size_t deleted = 0;
 	while (cursor->Next())
 		if (cursor->Delete())
@@ -198,33 +206,4 @@ std::unique_ptr<InternalCursor> QueryExecutor::PlaneQuery(Table& table, Conditio
 	}
 
 	return table.GetFullScanCursor();
-}
-
-std::unique_ptr<InternalCursor> QueryExecutor::GetCursor(Table & table, Conditions const & conditions) const
-{
-	for (auto const & condition : conditions) {
-		if (table.HasIndex(condition.GetColumn())) {
-			auto op = condition.GetOperation();
-			if (op != '=') {
-				auto inverted = op == '>' ? '<' : '>';
-				for (auto const & secondCondition : conditions)
-				{
-					if (secondCondition.GetColumn() == condition.GetColumn() 
-						&& secondCondition.GetOperation() == inverted) {
-						return op == '<'
-							? std::make_unique<FilterCursor>(table.GetIndexCursor(secondCondition, condition), conditions)
-							: std::make_unique<FilterCursor>(table.GetIndexCursor(condition, secondCondition), conditions);
-					}
-				}
-			}
-
-			return std::make_unique<FilterCursor>(table.GetIndexCursor(condition, condition), conditions);
-		}
-	}
-		
-
-	if(conditions.empty())
-		return table.GetFullScanCursor();
-
-	return std::make_unique<FilterCursor>(table.GetFullScanCursor(), conditions);
 }

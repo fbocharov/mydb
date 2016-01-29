@@ -10,7 +10,6 @@ JoinCursor::JoinCursor(std::unique_ptr<ICursor> left, std::unique_ptr<ICursor> r
 	, m_fields(fields)
 {
 	m_right->Next();
-	m_left->Next();
 }
 
 bool JoinCursor::Next() {
@@ -66,12 +65,10 @@ void JoinCursor::MoveToBegin() {
 	m_right->MoveToBegin();
 }
 
-std::string const& JoinCursor::GetTableName() const
-{
+std::string const& JoinCursor::GetTableName() const {
 	return m_left->GetTableName();
 }
 
-void JoinCursor::SetTableName(std::string const& value)
-{
+void JoinCursor::SetTableName(std::string const& value) {
 	m_left->SetTableName(value);
 }
